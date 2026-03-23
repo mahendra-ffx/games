@@ -1,0 +1,24 @@
+{
+  "game_type": "suburb_challenge",
+  "region": "master",
+  "date": "daily",
+  "center": [149.100, -35.295],
+  "zoom": 11,
+  "suburbs": [
+    "BRADDON", "REID", "KINGSTON", "BARTON", "YARRALUMLA", "AINSLIE", "WATSON", "ACTON", "DICKSON", "FORREST", "GRIFFITH",
+    "ARANDA", "BRUCE", "CHARNWOOD", "COOK", "DUNLOP", "FLOREY", "HAWKER", "KALEEN", "LATHAM", "MACQUARIE", "PAGE", "SCULLIN",
+    "AMAROO", "CASEY", "FRANKLIN", "GUNGAHLIN", "HARRISON", "NICHOLLS", "PALMERSTON", "TAYLOR",
+    "BANKS", "CALWELL", "CHISHOLM", "FADDEN", "GORDON", "KAMBAH", "MONASH", "THEODORE", "WANNIASSA",
+    "CHIFLEY", "CURTIN", "FARRER", "GARRAN", "HUGHES", "LYONS", "MAWSON", "PEARCE", "PHILLIP", "WESTON"
+  ],
+  "happy_images": ["/reactions/barr_happy.png", "/reactions/Ricky_happy.png"],
+  "sad_images": ["/reactions/barr_sad.png", "/reactions/Liz_sad.png", "/reactions/Nick_sad.png", "/reactions/Parton_sad.png", "/reactions/Ricky1_sad.png"],
+  "ranks": {
+    "90": "Canberra Legend — You ARE the map 🗺️🏆",
+    "80": "ACT Atlas 📍",
+    "70": "Well-Rounded Canberran 🎯",
+    "50": "Solid Local Knowledge 👍",
+    "30": "Know Your Own Suburb 🏡",
+    "0": "Just Moved Here? Welcome! 👋"
+  }
+}

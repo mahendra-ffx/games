@@ -1,0 +1,21 @@
+{
+  "game_type": "suburb_challenge",
+  "region": "inner",
+  "date": "daily",
+  "center": [149.130, -35.290],
+  "zoom": 13,
+  "suburbs": [
+    "ACTON", "AINSLIE", "BRADDON", "CAMPBELL", "CITY", "DICKSON",
+    "DOWNER", "HACKETT", "LYNEHAM", "O'CONNOR", "REID", "TURNER",
+    "WATSON", "BARTON", "DEAKIN", "FORREST", "FYSHWICK",
+    "GRIFFITH", "KINGSTON", "NARRABUNDAH", "PARKES", "RED HILL", "YARRALUMLA"
+  ],
+  "happy_images": ["/reactions/barr_happy.png", "/reactions/Ricky_happy.png"],
+  "sad_images": ["/reactions/barr_sad.png", "/reactions/Liz_sad.png", "/reactions/Nick_sad.png", "/reactions/Parton_sad.png", "/reactions/Ricky1_sad.png"],
+  "ranks": {
+    "90": "Inner North/South Elite ☕",
+    "70": "Public Servant 👔",
+    "50": "Visiting from Gungahlin 🚋",
+    "0": "Lost Tourist 📸"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "name": "games-hub",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:a11y": "playwright test --project=a11y"
+  },
+  "dependencies": {
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@sentry/nextjs": "^8.45.0",
+    "idb-keyval": "^6.2.1",
+    "maplibre-gl": "^4.7.1",
+    "canvas-confetti": "^1.9.3",
+    "posthog-js": "^1.201.0",
+    "@ducanh2912/next-pwa": "^10.2.9",
+    "workbox-window": "^7.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.1",
+    "@types/canvas-confetti": "^1.9.0",
+    "tailwindcss": "^4.0.0",
+    "@tailwindcss/postcss": "^4.0.0",
+    "eslint": "^9.17.0",
+    "eslint-config-next": "^15.1.0",
+    "vitest": "^2.1.8",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^2.1.8",
+    "@vitest/ui": "^2.1.8",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@testing-library/jest-dom": "^6.6.3",
+    "msw": "^2.7.0",
+    "@playwright/test": "^1.49.1",
+    "axe-playwright": "^2.0.3",
+    "jsdom": "^25.0.1"
+  }
+}

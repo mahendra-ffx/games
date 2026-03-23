@@ -1,0 +1,80 @@
+{
+  "game_type": "timeline_guess",
+  "date": "2026-03-20",
+  "title": "Flashback Friday",
+  "year_range": [1920, 2026],
+  "photos": [
+    {
+      "image": "/images/img1.jpg",
+      "year": 1994,
+      "credit": "Canberra Times",
+      "desc": "Raiders legends Laurie Daley, Bradley Clyde, and Mal Meninga celebrate the 36-12 Grand Final demolition of Canterbury.",
+      "hint_decade": "1990s",
+      "hint_context": "A Grand Final win at a Sydney stadium"
+    },
+    {
+      "image": "/images/img2.jpg",
+      "year": 1967,
+      "credit": "Canberra Times",
+      "desc": "A view of the Sears Morton Sales store on Bunda Street, Civic, long before the Canberra Centre took over.",
+      "hint_decade": "1960s",
+      "hint_context": "Old Civic shopfronts before the shopping centre era"
+    },
+    {
+      "image": "/images/img3.jpg",
+      "year": 1977,
+      "credit": "Canberra Times",
+      "desc": "The 'Down to Earth Confest' demonstration against uranium mining at Old Parliament House.",
+      "hint_decade": "1970s",
+      "hint_context": "A protest outside a famous white building in the capital"
+    },
+    {
+      "image": "/images/img4.jpg",
+      "year": 1991,
+      "credit": "Canberra Times",
+      "desc": "Members of the Dutch carnival group 'The Windmills' downing steins at the Oktoberfest Parade.",
+      "hint_decade": "1990s",
+      "hint_context": "An international cultural festival in Canberra"
+    },
+    {
+      "image": "/images/img5.jpg",
+      "year": 1928,
+      "credit": "Canberra Times",
+      "desc": "Crowds gathering at the newly built Capitol Theatre in Manuka.",
+      "hint_decade": "1920s",
+      "hint_context": "An early entertainment venue in the new capital city"
+    },
+    {
+      "image": "/images/img6.jpg",
+      "year": 1984,
+      "credit": "Canberra Times",
+      "desc": "Women march through Civic's Petrie Plaza in a 'Reclaim the Night' march to demonstrate women's right to walk alone safely.",
+      "hint_decade": "1980s",
+      "hint_context": "A social justice march through central Canberra"
+    },
+    {
+      "image": "/images/img7.jpg",
+      "year": 2014,
+      "credit": "Jeffrey Chan / Canberra Times",
+      "desc": "Ikea Country Manager David Hood, ACT Chief Minister Katy Gallagher, and Andrew Barr MLA announce the opening of the Canberra store.",
+      "hint_decade": "2010s",
+      "hint_context": "A major retail announcement involving a Swedish furniture brand"
+    },
+    {
+      "image": "/images/img8.jpg",
+      "year": 2011,
+      "credit": "Karleen Minney / Canberra Times",
+      "desc": "HRH Queen Elizabeth visits the Australian War Memorial and lays a wreath at the Tomb of the Unknown Soldier.",
+      "hint_decade": "2010s",
+      "hint_context": "A royal visit to one of Canberra's most important institutions"
+    },
+    {
+      "image": "/images/img9.jpg",
+      "year": 2003,
+      "credit": "Andrew Campbell / Canberra Times",
+      "desc": "The BP service station in Duffy on Burrinjuck Drive engulfed in flames during the devastating January bushfires.",
+      "hint_decade": "2000s",
+      "hint_context": "Canberra's worst natural disaster in modern times"
+    }
+  ]
+}

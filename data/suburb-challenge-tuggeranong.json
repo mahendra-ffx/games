@@ -1,0 +1,21 @@
+{
+  "game_type": "suburb_challenge",
+  "region": "tuggeranong",
+  "date": "daily",
+  "center": [149.085, -35.405],
+  "zoom": 12,
+  "suburbs": [
+    "BANKS", "BONYTHON", "CALWELL", "CHISHOLM", "CONDER", "FADDEN",
+    "GILMORE", "GORDON", "GOWRIE", "GREENWAY",
+    "ISABELLA PLAINS", "KAMBAH", "MACARTHUR", "MONASH",
+    "OXLEY", "RICHARDSON", "THEODORE", "WANNIASSA"
+  ],
+  "happy_images": ["/reactions/barr_happy.png", "/reactions/Ricky_happy.png"],
+  "sad_images": ["/reactions/barr_sad.png", "/reactions/Liz_sad.png", "/reactions/Nick_sad.png", "/reactions/Parton_sad.png", "/reactions/Ricky1_sad.png"],
+  "ranks": {
+    "90": "Tuggeranong Titan 🦄",
+    "70": "Southside Local 🏡",
+    "50": "Borderline Blow-in 🚌",
+    "0": "Lost Tourist 📸"
+  }
+}

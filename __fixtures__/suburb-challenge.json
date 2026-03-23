@@ -1,0 +1,17 @@
+{
+  "game_type": "suburb_challenge",
+  "region": "inner",
+  "date": "2026-03-22",
+  "center": [149.130, -35.290],
+  "zoom": 13,
+  "suburbs": ["BRADDON", "KINGSTON", "AINSLIE", "BARTON", "YARRALUMLA"],
+  "happy_images": ["/images/barr_happy.png"],
+  "sad_images": ["/images/barr_sad.png"],
+  "ranks": {
+    "100": "Inner North/South Royalty 👑",
+    "80": "Braddon Brunch Regular ☕",
+    "60": "Knows the Lake Walk 🦢",
+    "40": "CBD Day-Tripper 🚌",
+    "0": "Hopelessly Lost near Parliament 😅"
+  }
+}

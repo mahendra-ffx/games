@@ -1,0 +1,21 @@
+{
+  "game_type": "suburb_challenge",
+  "region": "belconnen",
+  "date": "daily",
+  "center": [149.068, -35.235],
+  "zoom": 12,
+  "suburbs": [
+    "ARANDA", "BRUCE", "CHARNWOOD", "COOK", "DUNLOP", "EVATT",
+    "FLOREY", "FLYNN", "FRASER", "GIRALANG", "HAWKER", "HIGGINS",
+    "HOLT", "KALEEN", "LATHAM", "LAWSON", "MACGREGOR", "MACQUARIE",
+    "MCKELLAR", "MELBA", "PAGE", "SCULLIN", "SPENCE", "WEETANGERA"
+  ],
+  "happy_images": ["/reactions/barr_happy.png", "/reactions/Ricky_happy.png"],
+  "sad_images": ["/reactions/barr_sad.png", "/reactions/Liz_sad.png", "/reactions/Nick_sad.png", "/reactions/Parton_sad.png", "/reactions/Ricky1_sad.png"],
+  "ranks": {
+    "90": "Belco Legend 🏆",
+    "70": "Westfield Wizard 🧙",
+    "50": "Belco Local 🙂",
+    "0": "Stuck on the Tuggeranong Parkway 😬"
+  }
+}

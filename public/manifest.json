@@ -1,0 +1,35 @@
+{
+  "name": "Canberra Times Games",
+  "short_name": "CT Games",
+  "description": "Daily puzzles and map games from The Canberra Times. New challenges every day.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#00558C",
+  "orientation": "portrait-primary",
+  "lang": "en-AU",
+  "categories": ["games", "news"],
+  "icons": [],
+  "shortcuts": [
+    {
+      "name": "North vs South",
+      "short_name": "N vs S",
+      "description": "Play today's free daily game",
+      "url": "/north-vs-south"
+    },
+    {
+      "name": "Daily Crossword",
+      "short_name": "Crossword",
+      "url": "/crossword"
+    }
+  ],
+  "share_target": {
+    "action": "/share-target",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}

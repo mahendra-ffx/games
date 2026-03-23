@@ -1,0 +1,316 @@
+@import "tailwindcss";
+
+/* ── Dark mode: class-based so user can override system preference ── */
+@custom-variant dark (&:is(.dark *));
+
+/* ── Design tokens (from Figma — Explore Travel vertical) ──────────── */
+@theme {
+  /* Colors — Tailwind gray scale */
+  --color-gray-50: #F9FAFB;
+  --color-gray-100: #F3F4F6;
+  --color-gray-200: #E5E7EB;
+  --color-gray-300: #D1D5DB;
+  --color-gray-400: #9CA3AF;
+  --color-gray-500: #6B7280;
+  --color-gray-600: #4B5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1F2937;
+  --color-gray-900: #111827;
+
+  /* Brand */
+  --color-ct-blue: #00558C;
+  --color-ct-blue-dark: #3b9fd4;
+
+  /* Semantic — states */
+  --color-correct: #22c55e;
+  --color-correct-dark: #4ade80;
+  --color-wrong: #ef4444;
+  --color-wrong-dark: #f87171;
+  --color-warning-bg: #FEF3C7;
+  --color-warning-text: #92400E;
+
+  /* Typography */
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-base: 0 1px 2px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* ── CSS custom properties for light / dark theming ────────────────── */
+:root {
+  --bg-page: #ffffff;
+  --bg-surface: #f8f9fa;
+  --bg-surface-hover: #f1f3f5;
+  --text-primary: #111111;
+  --text-secondary: #666666;
+  --text-muted: #9CA3AF;
+  --border: #e0e0e0;
+  --border-strong: #D1D5DB;
+  --ring: #00558C;
+
+  /* Map tiles */
+  --map-tile-style: "https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json";
+
+  /* ── Game state colours (WCAG AA ≥ 4.5:1) ────────────────────────── */
+  /* Correct / revealed — green */
+  --game-correct-bg:   #dcfce7;
+  --game-correct-text: #14532d;  /* 8.9:1 on --game-correct-bg */
+  /* Wrong / incorrect — red */
+  --game-wrong-bg:     #fee2e2;
+  --game-wrong-text:   #7f1d1d;  /* 9.5:1 on --game-wrong-bg  */
+  /* Active cell — blue */
+  --game-active-bg:    #dbeafe;
+  /* Word highlight — lighter blue */
+  --game-word-bg:      #eff6ff;
+  /* Revealed letter — purple */
+  --game-revealed-text: #5b21b6; /* 5.2:1 on --game-correct-bg */
+  /* Hint box — purple tint */
+  --game-hint-bg:      #f5f3ff;
+  --game-hint-text:    #4c1d95;  /* 8.1:1 on --game-hint-bg   */
+  /* Active clue list item */
+  --game-clue-active-bg: #eff6ff;
+}
+
+.dark {
+  --bg-page: #0a0a0a;
+  --bg-surface: #1a1a1a;
+  --bg-surface-hover: #242424;
+  --text-primary: #e8e8e8;
+  --text-secondary: #999999;
+  --text-muted: #6B7280;
+  --border: #2a2a2a;
+  --border-strong: #3a3a3a;
+  --ring: #3b9fd4;
+
+  --map-tile-style: "https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json";
+
+  /* ── Game state colours — dark mode (WCAG AA ≥ 4.5:1) ──────────── */
+  /* Correct — dark green bg, bright green text */
+  --game-correct-bg:   #14532d;
+  --game-correct-text: #86efac;  /* 8.1:1 on #14532d */
+  /* Wrong — dark red bg, bright red text */
+  --game-wrong-bg:     #450a0a;
+  --game-wrong-text:   #fca5a5;  /* 7.3:1 on #450a0a */
+  /* Active cell — dark blue, high-contrast text via --text-primary */
+  --game-active-bg:    #1e3a5f;  /* text-primary #e8e8e8 → 9.7:1 */
+  /* Word highlight — deeper blue */
+  --game-word-bg:      #172554;  /* text-primary #e8e8e8 → 12.7:1 */
+  /* Revealed — bright lavender */
+  --game-revealed-text: #c4b5fd; /* 9.4:1 on #14532d */
+  /* Hint box — deep violet */
+  --game-hint-bg:      #2e1065;
+  --game-hint-text:    #ddd6fe;  /* 10.2:1 on #2e1065 */
+  /* Active clue list item */
+  --game-clue-active-bg: #1e3a5f;
+}
+
+/* ── Base styles ────────────────────────────────────────────────────── */
+html {
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background-color: var(--bg-page);
+  /* Smooth dark mode transitions — but respect motion preferences */
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    transition: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Focus styles — visible for keyboard nav ────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Typography scale ───────────────────────────────────────────────── */
+.type-hero {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+.type-headline {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 1.25rem;
+  line-height: normal;
+}
+
+.type-body {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.type-label {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.type-byline {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  text-transform: capitalize;
+}
+
+.type-button {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ── Card styles (adapted from Explore Travel article cards) ────────── */
+.game-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.game-card:hover {
+  box-shadow: var(--shadow-base);
+  transform: translateY(-1px);
+}
+
+/* ── Timer states ───────────────────────────────────────────────────── */
+.timer-safe { color: #22c55e; }
+.timer-warn { color: #f59e0b; }
+.timer-danger { color: #ef4444; }
+
+/* ── Game states ────────────────────────────────────────────────────── */
+.state-correct {
+  background-color: #dcfce7;
+  border-color: #22c55e;
+  color: #166534;
+}
+
+.dark .state-correct {
+  background-color: #14532d;
+  border-color: #4ade80;
+  color: #bbf7d0;
+}
+
+.state-wrong {
+  background-color: #fee2e2;
+  border-color: #ef4444;
+  color: #991b1b;
+}
+
+.dark .state-wrong {
+  background-color: #7f1d1d;
+  border-color: #f87171;
+  color: #fecaca;
+}
+
+/* ── Premium lock overlay ───────────────────────────────────────────── */
+.premium-lock {
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-lock::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 30%,
+    rgba(var(--bg-page), 0.95) 70%,
+    var(--bg-page) 100%
+  );
+  pointer-events: none;
+}
+
+/* ── Colour-blind mode — pattern overlays replace colour-only states ── */
+/*
+ * Applied when <html class="colour-blind"> is set by ColorBlindToggle.
+ * Patterns supplement colour (never replace it) to meet WCAG 1.4.1.
+ * Diagonal stripes for correct, cross-hatch for wrong, dots for warning.
+ */
+
+.colour-blind .state-correct {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    rgba(22, 101, 52, 0.25) 4px,
+    rgba(22, 101, 52, 0.25) 8px
+  );
+}
+
+.colour-blind .state-wrong {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    rgba(153, 27, 27, 0.25) 4px,
+    rgba(153, 27, 27, 0.25) 8px
+  ),
+  repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 4px,
+    rgba(153, 27, 27, 0.25) 4px,
+    rgba(153, 27, 27, 0.25) 8px
+  );
+}
+
+/* Map layer colour overrides for colour-blind mode */
+.colour-blind .timer-safe { color: #0ea5e9; }  /* Blue instead of green */
+.colour-blind .timer-danger { color: #f97316; } /* Orange instead of red */
+
+/* Crossword correct cell: striped fill */
+.colour-blind [data-cell-state="correct"] {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 3px,
+    rgba(22, 101, 52, 0.2) 3px,
+    rgba(22, 101, 52, 0.2) 6px
+  );
+}
+
+/* ── Streak badge ───────────────────────────────────────────────────── */
+.streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}

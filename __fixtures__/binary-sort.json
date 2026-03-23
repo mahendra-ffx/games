@@ -1,0 +1,18 @@
+{
+  "game_type": "binary_sort",
+  "date": "2026-03-22",
+  "rounds": 5,
+  "time_per_round_ms": 5000,
+  "categories": {
+    "NORTH": { "color": "#3498db", "label": "North" },
+    "SOUTH": { "color": "#e67e22", "label": "South" }
+  },
+  "items": [
+    { "name": "BRADDON", "category": "NORTH" },
+    { "name": "KINGSTON", "category": "SOUTH" },
+    { "name": "DICKSON", "category": "NORTH" },
+    { "name": "TUGGERANONG", "category": "SOUTH" },
+    { "name": "BELCONNEN", "category": "NORTH" }
+  ],
+  "divider_line": [[-35.29, 149.01], [-35.29, 149.22]]
+}

@@ -1,0 +1,11 @@
+{
+  "game_type": "landmark_hunt",
+  "date": "2026-03-22",
+  "rounds": 3,
+  "time_limit_sec": 8,
+  "locations": [
+    { "name": "Telstra Tower", "emoji": "📡", "lat": -35.2758, "lng": 149.0977 },
+    { "name": "Parliament House", "emoji": "🏛️", "lat": -35.3081, "lng": 149.1244 },
+    { "name": "Australian War Memorial", "emoji": "🎖️", "lat": -35.2800, "lng": 149.1508 }
+  ]
+}

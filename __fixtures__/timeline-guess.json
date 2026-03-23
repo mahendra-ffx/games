@@ -1,0 +1,24 @@
+{
+  "game_type": "timeline_guess",
+  "date": "2026-03-22",
+  "title": "Flashback Friday",
+  "year_range": [1960, 2000],
+  "photos": [
+    {
+      "image": "/img1.jpg",
+      "year": 1994,
+      "credit": "Canberra Times",
+      "desc": "Raiders celebrate the 36-12 Grand Final demolition of the Brisbane Broncos at ANZ Stadium.",
+      "hint_decade": "1990s",
+      "hint_context": "Taken at a Grand Final"
+    },
+    {
+      "image": "/img2.jpg",
+      "year": 1971,
+      "credit": "Canberra Times",
+      "desc": "Lake Burley Griffin's water jets operating for the first time.",
+      "hint_decade": "1970s",
+      "hint_context": "A landmark opening ceremony"
+    }
+  ]
+}

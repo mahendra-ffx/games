@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 56" width="320" height="56" role="img" aria-label="The Canberra Times">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&amp;display=swap');
+      .blackletter { font-family: 'UnifrakturMaguntia', 'Old English Text MT', 'Blackletter', serif; }
+      .small-caps  { font-family: 'Georgia', serif; font-variant: small-caps; letter-spacing: 0.12em; }
+    </style>
+  </defs>
+  <!-- Masthead title -->
+  <text
+    x="160" y="36"
+    text-anchor="middle"
+    class="blackletter"
+    font-size="38"
+    font-weight="400"
+    fill="#111111"
+    letter-spacing="-0.5"
+  >The Canberra Times</text>
+  <!-- Celebrating line -->
+  <text
+    x="160" y="52"
+    text-anchor="middle"
+    class="small-caps"
+    font-size="9"
+    fill="#9a7c3a"
+    letter-spacing="3"
+    font-weight="600"
+  >CELEBRATING 100 YEARS</text>
+</svg>

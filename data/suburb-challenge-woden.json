@@ -1,0 +1,22 @@
+{
+  "game_type": "suburb_challenge",
+  "region": "woden",
+  "date": "daily",
+  "center": [149.078, -35.345],
+  "zoom": 12,
+  "suburbs": [
+    "CHIFLEY", "CURTIN", "FARRER", "GARRAN", "HUGHES", "ISAACS",
+    "LYONS", "MAWSON", "O'MALLEY", "PEARCE", "PHILLIP", "TORRENS",
+    "CHAPMAN", "DUFFY", "FISHER", "HOLDER", "RIVETT", "STIRLING",
+    "WARAMANGA", "WESTON", "COOMBS", "DENMAN PROSPECT", "MOLONGLO",
+    "WHITLAM", "WRIGHT"
+  ],
+  "happy_images": ["/reactions/barr_happy.png", "/reactions/Ricky_happy.png"],
+  "sad_images": ["/reactions/barr_sad.png", "/reactions/Liz_sad.png", "/reactions/Nick_sad.png", "/reactions/Parton_sad.png", "/reactions/Ricky1_sad.png"],
+  "ranks": {
+    "90": "Woden Valley Veteran 🎖️",
+    "70": "Westfield Woden Regular 🛍️",
+    "50": "South-Side Savant 🗺️",
+    "0": "Took Wrong Turn on Hindmarsh Drive 😂"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "game_type": "binary_sort",
+  "date": "2026-03-22",
+  "rounds": 15,
+  "time_per_round_ms": 5000,
+  "categories": {
+    "NORTH": { "color": "#3498db", "label": "North" },
+    "SOUTH": { "color": "#e67e22", "label": "South" }
+  },
+  "divider_line": [
+    [-35.292, 148.95],
+    [-35.292, 149.08],
+    [-35.282, 149.12],
+    [-35.275, 149.22],
+    [-35.275, 149.35]
+  ],
+  "items": [
+    { "name": "BRADDON",      "category": "NORTH", "lat": -35.267, "lng": 149.137 },
+    { "name": "KINGSTON",     "category": "SOUTH", "lat": -35.317, "lng": 149.145 },
+    { "name": "DICKSON",      "category": "NORTH", "lat": -35.253, "lng": 149.143 },
+    { "name": "TUGGERANONG",  "category": "SOUTH", "lat": -35.421, "lng": 149.069 },
+    { "name": "BELCONNEN",    "category": "NORTH", "lat": -35.235, "lng": 149.070 },
+    { "name": "BARTON",       "category": "SOUTH", "lat": -35.311, "lng": 149.133 },
+    { "name": "GUNGAHLIN",    "category": "NORTH", "lat": -35.183, "lng": 149.133 },
+    { "name": "FORREST",      "category": "SOUTH", "lat": -35.318, "lng": 149.122 },
+    { "name": "WATSON",       "category": "NORTH", "lat": -35.232, "lng": 149.161 },
+    { "name": "MANUKA",       "category": "SOUTH", "lat": -35.321, "lng": 149.130 },
+    { "name": "LYNEHAM",      "category": "NORTH", "lat": -35.258, "lng": 149.125 },
+    { "name": "GRIFFITH",     "category": "SOUTH", "lat": -35.330, "lng": 149.140 },
+    { "name": "DOWNER",       "category": "NORTH", "lat": -35.248, "lng": 149.147 },
+    { "name": "DEAKIN",       "category": "SOUTH", "lat": -35.321, "lng": 149.098 },
+    { "name": "KALEEN",       "category": "NORTH", "lat": -35.220, "lng": 149.100 },
+    { "name": "GARRAN",       "category": "SOUTH", "lat": -35.355, "lng": 149.100 },
+    { "name": "PAGE",         "category": "NORTH", "lat": -35.228, "lng": 149.043 },
+    { "name": "PEARCE",       "category": "SOUTH", "lat": -35.363, "lng": 149.065 },
+    { "name": "HACKETT",      "category": "NORTH", "lat": -35.244, "lng": 149.165 },
+    { "name": "MAWSON",       "category": "SOUTH", "lat": -35.380, "lng": 149.100 },
+    { "name": "O'CONNOR",     "category": "NORTH", "lat": -35.263, "lng": 149.107 },
+    { "name": "WODEN",        "category": "SOUTH", "lat": -35.345, "lng": 149.083 },
+    { "name": "TURNER",       "category": "NORTH", "lat": -35.272, "lng": 149.122 },
+    { "name": "CALWELL",      "category": "SOUTH", "lat": -35.430, "lng": 149.104 },
+    { "name": "AINSLIE",      "category": "NORTH", "lat": -35.269, "lng": 149.155 },
+    { "name": "WANNIASSA",    "category": "SOUTH", "lat": -35.400, "lng": 149.087 },
+    { "name": "BRUCE",        "category": "NORTH", "lat": -35.226, "lng": 149.080 },
+    { "name": "CHIFLEY",      "category": "SOUTH", "lat": -35.381, "lng": 149.071 },
+    { "name": "EVATT",        "category": "NORTH", "lat": -35.207, "lng": 149.054 },
+    { "name": "TORRENS",      "category": "SOUTH", "lat": -35.369, "lng": 149.073 }
+  ]
+}

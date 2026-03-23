@@ -1,0 +1,17 @@
+{
+  "game_type": "crossword",
+  "date": "2026-03-22",
+  "size": 5,
+  "clues": {
+    "across": {
+      "1": "Symbol of love ❤️",
+      "4": "Sports stadium 🏟️",
+      "5": "They twinkle ✨"
+    },
+    "down": {
+      "1": "Large quantities ⛰️",
+      "2": "A distinct region 🗺️",
+      "3": "Raiders, Brumbies 🏉"
+    }
+  }
+}
