@@ -9,9 +9,10 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const NAV_ITEMS = [
   { href: "/north-vs-south", label: "Daily Challenge" },
-  { href: "/map", label: "Map Games" },
   { href: "/crossword", label: "Crossword" },
+  { href: "/landmark", label: "Landmark Hunt" },
   { href: "/flashback", label: "Flashback" },
+  { href: "/map", label: "Map Games" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/archive", label: "Archive" },
 ];
