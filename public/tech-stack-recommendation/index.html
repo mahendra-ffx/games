@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Games Platform Tech Stack — Canberra Times</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0a;--surface:#141414;--surface2:#1c1c1c;--border:#2a2a2a;--text:#e8e8e8;--text2:#888;--accent:#3b82f6;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;--purple:#a855f7;--teal:#14b8a6;--coral:#f97316}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
+.container{max-width:960px;margin:0 auto;padding:24px 20px}
+h1{font-size:28px;font-weight:700;margin:0 0 4px}
+.subtitle{color:var(--text2);font-size:14px;margin-bottom:32px}
+h2{font-size:20px;font-weight:700;margin:40px 0 16px;padding-top:20px;border-top:1px solid var(--border)}
+h3{font-size:15px;font-weight:700;margin:20px 0 8px;color:var(--accent)}
+p,.detail{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:12px}
+strong{color:var(--text);font-weight:500}
+
+/* Audit table */
+.audit-grid{display:grid;gap:12px;margin:16px 0}
+.audit-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden}
+.audit-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.audit-card.g1::before{background:var(--accent)}
+.audit-card.g2::before{background:var(--green)}
+.audit-card.g3::before{background:var(--amber)}
+.audit-card.g4::before{background:var(--coral)}
+.audit-card.g5::before{background:var(--purple)}
+.audit-card .game-name{font-size:15px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.audit-card .game-type{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px}
+.audit-card .findings{font-size:13px;color:var(--text2);line-height:1.6}
+.audit-card .findings strong{color:var(--text)}
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:0.3px}
+.tag-issue{background:rgba(239,68,68,.15);color:var(--red)}
+.tag-good{background:rgba(34,197,94,.15);color:var(--green)}
+.tag-warn{background:rgba(245,158,11,.15);color:var(--amber)}
+
+/* Tech stack cards */
+.stack-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+@media(max-width:640px){.stack-grid{grid-template-columns:1fr}}
+.stack-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px}
+.stack-card h4{font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.stack-card .rec{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:6px}
+.stack-card .why{font-size:12px;color:var(--text2);line-height:1.6}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+
+/* Code blocks */
+pre{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;overflow-x:auto;margin:12px 0;color:var(--text2)}
+pre .k{color:var(--purple)}
+pre .s{color:var(--green)}
+pre .c{color:#555}
+pre .f{color:var(--accent)}
+pre .n{color:var(--amber)}
+
+/* Schema mapping */
+.schema-map{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin:12px 0}
+.schema-map .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.schema-map .header h4{margin:0;font-size:14px;font-weight:700}
+.schema-map .arrow{font-size:20px;color:var(--text2)}
+
+/* Callout */
+.callout{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:14px 16px;margin:16px 0;font-size:13px;color:var(--text);line-height:1.6}
+.callout strong{color:var(--accent)}
+.callout-warn{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.2)}
+.callout-warn strong{color:var(--amber)}
+
+/* Deps table */
+table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0}
+th{text-align:left;padding:8px 10px;background:var(--surface);color:var(--text2);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--border)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top}
+td:first-child{color:var(--text);font-weight:500}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Tech Stack Recommendation</h1>
+<p class="subtitle">games.canberratimes.com.au — 5 games, config-driven, integrated with NewsNow</p>
+
+<!-- ==================== SECTION 1: PROTOTYPE AUDIT ==================== -->
+<h2>1. Prototype audit — what you've built and what needs to change</h2>
+
+<div class="audit-grid">
+
+<div class="audit-card g1">
+<div class="game-name">🔤 Daily Mini Crossword</div>
+<div class="game-type">Game 1 — Word puzzle</div>
+<div class="findings">
+<span class="tag tag-good">Good</span> Clean 5x5 grid, smart direction toggling, hidden input for mobile keyboard, sticky clue bar UX.<br>
+<span class="tag tag-issue">Issue</span> <strong>Solution hardcoded in JS</strong> — layout array contains answers in plain text. Any user can view-source. For production, answers must come from a server-side API that only validates guesses, never sends the full solution.<br>
+<span class="tag tag-issue">Issue</span> <strong>No state persistence.</strong> Refresh = progress lost. Needs IndexedDB save/restore.<br>
+<span class="tag tag-warn">Warn</span> <strong>No share mechanic.</strong> No streak. No completion time tracking. These are your engagement and viral loops — they need to be first-class features.<br>
+<span class="tag tag-warn">Warn</span> Grid is hardcoded HTML generation via vanilla JS DOM manipulation. Works for prototype but won't scale to daily content rotation.
+</div>
+</div>
+
+<div class="audit-card g2">
+<div class="game-name">📍 Hunt the Landmark</div>
+<div class="game-type">Game 2 — Map-based location guessing (timed)</div>
+<div class="findings">
+<span class="tag tag-good">Good</span> 60+ Canberra locations, emoji clues, distance scoring, 8-second timer creates urgency, confetti on wins, fun rank system ("Stuck in the Glenloch Interchange").<br>
+<span class="tag tag-good">Good</span> <strong>Share function exists</strong> — uses Web Share API with clipboard fallback. This is ready for viral distribution.<br>
+<span class="tag tag-issue">Issue</span> <strong>All 60+ locations in client JS.</strong> Needs CMS-fed JSON. Also, answer coordinates are exposed client-side — trivial to cheat.<br>
+<span class="tag tag-issue">Issue</span> <strong>Leaflet.js (180KB) loaded from unpkg CDN on every visit.</strong> No caching strategy. No service worker. This game is the heaviest of the five.<br>
+<span class="tag tag-warn">Warn</span> Timer uses setInterval at 50ms — battery drain on mobile. requestAnimationFrame is better.
+</div>
+</div>
+
+<div class="audit-card g3">
+<div class="game-name">🗺️ Map Games (5 regions + master)</div>
+<div class="game-type">Game 3 — GeoJSON suburb identification</div>
+<div class="findings">
+<span class="tag tag-good">Good</span> <strong>Local celebrity reaction images</strong> are genuinely funny and extremely Canberra. This is your most shareable mechanic — keep and expand it.<br>
+<span class="tag tag-good">Good</span> Region selector in master map, per-region variants, rank system with local humour ("Light Rail Lord", "Stuck at a Roundabout").<br>
+<span class="tag tag-issue">Issue</span> <strong>6 separate HTML files that are 80% identical code.</strong> This is the clearest case for a single config-driven renderer. One component, regional JSON configs.<br>
+<span class="tag tag-issue">Issue</span> <strong>GeoJSON fetched from GitHub on every load</strong> (~500KB). Needs to be bundled, cached, or served from your own CDN with service worker caching.<br>
+<span class="tag tag-warn">Warn</span> Gungahlin version has confetti + end screen + share. Belconnen/Woden don't. Feature parity is inconsistent across variants.
+</div>
+</div>
+
+<div class="audit-card g4">
+<div class="game-name">🧱 North vs South</div>
+<div class="game-type">Game 4 — Speed-based suburb sorting</div>
+<div class="findings">
+<span class="tag tag-good">Good</span> <strong>Best game mechanic of the five.</strong> Binary choice + time pressure + speed-based scoring = highly addictive. The two big buttons (NORTH/SOUTH) are perfect for mobile.<br>
+<span class="tag tag-good">Good</span> Draws the "wall" dividing line on the map, colour-coded timer (green→yellow→red), floating score popup animation.<br>
+<span class="tag tag-issue">Issue</span> Same GeoJSON-from-GitHub dependency as Map Games.<br>
+<span class="tag tag-warn">Warn</span> <strong>Consider making this the free daily game.</strong> It's fast (15 rounds × 5 seconds = ~2 minutes), instantly understandable, highly shareable, and doesn't require map literacy. It's your best candidate for the Wordle-equivalent acquisition funnel.
+</div>
+</div>
+
+<div class="audit-card g5">
+<div class="game-name">🎞️ Retro Canberra / Flashback Friday</div>
+<div class="game-type">Game 5 — Archive photo year-guessing</div>
+<div class="findings">
+<span class="tag tag-good">Good</span> <strong>The best use of the Silverstone/Valencia archive.</strong> Sepia-to-colour reveal on answer is a beautiful touch. Year slider is intuitive. Scoring based on year proximity is fair.<br>
+<span class="tag tag-good">Good</span> Editorial-quality content — each photo has credit, year, and a descriptive fact. This is journalism-meets-games done right.<br>
+<span class="tag tag-issue">Issue</span> <strong>9 images hardcoded.</strong> This game lives or dies on fresh content. It's the #1 candidate for AI agent automation: agent queries Valencia/Silverstone for archive photos with date metadata, generates the JSON config, editor approves the weekly batch.<br>
+<span class="tag tag-issue">Issue</span> <strong>Images loaded from local file paths</strong> (img1.jpg etc). No lazy loading, no responsive sizes, no CDN. 9 high-res photos = significant payload.<br>
+<span class="tag tag-warn">Warn</span> No share mechanic. Add a shareable score card: "I scored 8,500 on Flashback Friday — Canberra Historian 🏛️"
+</div>
+</div>
+
+</div>
+
+<!-- ==================== SECTION 2: CROSS-CUTTING ISSUES ==================== -->
+<h2>2. Cross-cutting issues across all prototypes</h2>
+
+<table>
+<tr><th>Issue</th><th>Impact</th><th>Fix</th></tr>
+<tr><td>No service worker</td><td>Zero offline capability, no cache control, no push notifications</td><td>Workbox SW with app shell + content cache strategies</td></tr>
+<tr><td>No state persistence</td><td>Streaks impossible. Refresh loses progress. No cross-device sync</td><td>IndexedDB (via idb-keyval) for local state. Sync to API when logged in</td></tr>
+<tr><td>All game data client-side</td><td>Answers visible in source. Cheating trivial. Can't rotate daily content</td><td>Game content served via API (JSON feed from CMS). Validate answers server-side</td></tr>
+<tr><td>No analytics events</td><td>Can't measure DAU, completion rates, share rates, or conversion</td><td>Event pipeline from day 1 (PostHog or Amplitude)</td></tr>
+<tr><td>No Piano integration</td><td>Can't distinguish free vs premium users. No paywall enforcement</td><td>Piano SDK on page load. Check entitlement before rendering premium games</td></tr>
+<tr><td>6+ separate HTML files</td><td>Code duplication. Inconsistent features. Impossible to maintain at scale</td><td>Single app with shared game engine + config-driven renderers</td></tr>
+<tr><td>External CDN dependencies</td><td>Leaflet, confetti loaded from unpkg/jsdelivr on every visit. No cache control</td><td>Bundle dependencies. Self-host or pin + precache in SW</td></tr>
+<tr><td>No responsive image handling</td><td>Full-res archive photos on mobile = slow loads, wasted bandwidth</td><td>Transform service for responsive sizes. &lt;picture&gt; with srcset</td></tr>
+</table>
+
+<!-- ==================== SECTION 3: RECOMMENDED STACK ==================== -->
+<h2>3. Recommended tech stack</h2>
+
+<div class="stack-grid">
+
+<div class="stack-card">
+<h4><span class="dot" style="background:var(--accent)"></span> Framework</h4>
+<div class="rec">Next.js 15 (App Router)</div>
+<div class="why">
+<strong>Why not Astro:</strong> Your games need client-side interactivity (map interactions, timers, drag/sort). Astro is great for static content sites but you'd need to hydrate heavy island components anyway. Next.js gives you SSR for the hub/shell, client components for games, ISR for daily content rotation, and API routes for score validation — all in one framework.<br><br>
+<strong>Why not plain HTML:</strong> You have 5+ games sharing common patterns (scoring, streaks, sharing, analytics, auth). A component framework eliminates the 80% code duplication you currently have across 10+ HTML files.
+</div>
+</div>
+
+<div class="stack-card">
+<h4><span class="dot" style="background:var(--green)"></span> UI / components</h4>
+<div class="rec">React 19 + Tailwind CSS 4</div>
+<div class="why">
+<strong>Shared game shell:</strong> Header, score display, streak tracker, share button, clue bar — these are reusable React components consumed by every game renderer.<br><br>
+<strong>Tailwind:</strong> Matches your prototype's utility-first approach. Fast to iterate, consistent spacing/colour, responsive by default. No CSS duplication across game files.
+</div>
+</div>
+
+<div class="stack-card">
+<h4><span class="dot" style="background:var(--purple)"></span> Maps</h4>
+<div class="rec">MapLibre GL JS (replaces Leaflet)</div>
+<div class="why">
+<strong>Why switch:</strong> Leaflet is 180KB and renders on the DOM (slow for complex GeoJSON). MapLibre GL is WebGL-rendered, handles your suburb polygons more smoothly, supports vector tiles (smaller payloads than raw GeoJSON), and is open source. 3 of your 5 games use maps — this is a significant performance win.<br><br>
+<strong>Alternative:</strong> If you want to keep Leaflet for simplicity, at minimum self-host it and precache in the service worker. But MapLibre is the modern choice.
+</div>
+</div>
+
+<div class="stack-card">
+<h4><span class="dot" style="background:var(--teal)"></span> Offline + PWA</h4>
+<div class="rec">Workbox 7 + next-pwa</div>
+<div class="why">
+<strong>Cache strategies:</strong><br>
+— App shell (HTML/CSS/JS): <strong>Cache-first</strong>, update on new deploy<br>
+— Game JSON (today's config): <strong>Stale-while-revalidate</strong><br>
+— GeoJSON suburb data: <strong>Cache-first</strong> (rarely changes)<br>
+— Archive images: <strong>Cache-first</strong> with size limit<br>
+— API calls (scores, leaderboard): <strong>Network-first</strong> with offline queue<br><br>
+<strong>Pre-fetch:</strong> Service worker fetches tomorrow's game JSON overnight. User opens app on the bus — instant load.
+</div>
+</div>
+
+<div class="stack-card">
+<h4><span class="dot" style="background:var(--amber)"></span> Local storage</h4>
+<div class="rec">idb-keyval (IndexedDB wrapper) — 600 bytes</div>
+<div class="why">
+<strong>What gets stored locally:</strong><br>
+— Player streaks (per game)<br>
+— Current game progress (survive page refresh)<br>
+— Completed games today (don't replay)<br>
+— User preferences (region, notification opt-in)<br>
+— Offline event queue (flush when online)<br><br>
+<strong>Why not localStorage:</strong> 5MB limit, synchronous (blocks main thread), no structured data. IndexedDB handles all of this better. idb-keyval makes it as simple as get/set.
+</div>
+</div>
+
+<div class="stack-card">
+<h4><span class="dot" style="background:var(--coral)"></span> CMS + content pipeline</h4>
+<div class="rec">Sanity.io (hosted) or Strapi 5 (self-hosted)</div>
+<div class="why">
+<strong>Sanity advantages:</strong> Real-time collaboration, structured content schemas, built-in image pipeline (replaces some Transform work), webhook on publish, generous free tier (3 users, 500K API requests/mo).<br><br>
+<strong>Editorial workflow:</strong> AI agent submits draft → editor reviews in Sanity Studio → schedules for 5am AEDT → webhook triggers Next.js ISR rebuild → CDN purges stale content.<br><br>
+<strong>If self-hosting required:</strong> Strapi 5 on an ACM-managed server. Same schema approach, more ops overhead.
+</div>
+</div>
+
+<div class="stack-card">
+<h4><span class="dot" style="background:var(--red)"></span> AI content agents</h4>
+<div class="rec">Cloud Functions (GCP/AWS Lambda) + Claude API via Sochi</div>
+<div class="why">
+<strong>Agent pipeline:</strong><br>
+1. Cron triggers agent function daily/weekly<br>
+2. Agent queries Silverstone (archive stories) + Valencia (photos)<br>
+3. Agent calls Claude API via Sochi proxy with structured output schema<br>
+4. Agent validates JSON against game-type schema<br>
+5. Agent submits to Sanity as draft via API<br>
+6. Editor reviews and publishes<br><br>
+<strong>Per-game agent:</strong> Each game type has its own prompt template and validation rules. Trivia agent generates questions from archive content. Flashback agent pairs photos with year + fact. Crossword agent generates grids with local clue themes.
+</div>
+</div>
+
+<div class="stack-card">
+<h4><span class="dot" style="background:var(--accent)"></span> Hosting + edge</h4>
+<div class="rec">Vercel (primary) or Cloudflare Pages</div>
+<div class="why">
+<strong>Vercel:</strong> Zero-config Next.js deployment, edge functions for score validation, built-in ISR, preview deployments for editorial review, Web Analytics included.<br><br>
+<strong>Cloudflare alternative:</strong> If ACM prefers to keep infrastructure in-house, Cloudflare Pages + Workers + KV gives you the same edge-first architecture with more control.<br><br>
+<strong>Subdomain:</strong> games.canberratimes.com.au → Vercel/CF. Shares .canberratimes.com.au cookie domain for Piano session passthrough.
+</div>
+</div>
+
+<div class="stack-card">
+<h4><span class="dot" style="background:var(--green)"></span> Analytics</h4>
+<div class="rec">PostHog (self-hosted or cloud)</div>
+<div class="why">
+<strong>Why PostHog over Amplitude:</strong> Open source, can self-host (ACM data sovereignty), built-in session replay (debug UX issues), feature flags (A/B test game variants), funnel analysis, and cohort retention — all in one tool. Free tier: 1M events/mo.<br><br>
+<strong>Critical:</strong> Every event carries <code>piano_uid</code> as a user property. This is joined with Dijon subscription data for the retention correlation analysis.
+</div>
+</div>
+
+<div class="stack-card">
+<h4><span class="dot" style="background:var(--purple)"></span> Push notifications</h4>
+<div class="rec">Firebase Cloud Messaging (FCM) via Web Push API</div>
+<div class="why">
+<strong>Daily puzzle notification:</strong> "Your daily games are ready 🧩" at 5am AEDT. Simple, proven, free. FCM handles the push infrastructure; your service worker displays the notification.<br><br>
+<strong>PWA install prompt:</strong> After 3 consecutive daily visits, prompt "Add to Home Screen" for app-like experience. Installed PWA = higher retention.
+</div>
+</div>
+
+</div>
+
+<!-- ==================== SECTION 4: GAME→CONFIG MAPPING ==================== -->
+<h2>4. How each game maps to config-driven architecture</h2>
+
+<div class="schema-map">
+<div class="header"><h4>🔤 Daily Mini Crossword → CrosswordRenderer</h4></div>
+<pre><span class="c">// CMS schema — editor/AI fills this, renderer reads it</span>
+{
+  <span class="k">"game_type"</span>: <span class="s">"crossword"</span>,
+  <span class="k">"date"</span>: <span class="s">"2026-03-22"</span>,
+  <span class="k">"size"</span>: <span class="n">5</span>,
+  <span class="k">"layout"</span>: [<span class="s">"HEART"</span>, <span class="s">"E*R*E"</span>, <span class="s">"ARENA"</span>, <span class="s">"P*A*M"</span>, <span class="s">"STARS"</span>],
+  <span class="k">"clues"</span>: {
+    <span class="k">"across"</span>: { <span class="s">"1"</span>: <span class="s">"Symbol of love ❤️"</span>, ... },
+    <span class="k">"down"</span>: { <span class="s">"1"</span>: <span class="s">"Large quantities ⛰️"</span>, ... }
+  }
+}
+<span class="c">// NOTE: layout NOT sent to client. Server validates guesses per-cell.</span></pre>
+</div>
+
+<div class="schema-map">
+<div class="header"><h4>📍 Hunt the Landmark → LocationGuessRenderer</h4></div>
+<pre>{
+  <span class="k">"game_type"</span>: <span class="s">"landmark_hunt"</span>,
+  <span class="k">"date"</span>: <span class="s">"2026-03-22"</span>,
+  <span class="k">"rounds"</span>: <span class="n">10</span>,
+  <span class="k">"time_limit_sec"</span>: <span class="n">8</span>,
+  <span class="k">"locations"</span>: [
+    { <span class="k">"name"</span>: <span class="s">"Telstra Tower"</span>, <span class="k">"emoji"</span>: <span class="s">"🗼"</span>, <span class="k">"lat"</span>: <span class="n">-35.2758</span>, <span class="k">"lng"</span>: <span class="n">149.0977</span> }
+  ]
+}
+<span class="c">// Coordinates validated server-side. Client sends click lat/lng → server returns distance + score.</span></pre>
+</div>
+
+<div class="schema-map">
+<div class="header"><h4>🗺️ Map Games → SuburbChallengeRenderer</h4></div>
+<pre>{
+  <span class="k">"game_type"</span>: <span class="s">"suburb_challenge"</span>,
+  <span class="k">"region"</span>: <span class="s">"gungahlin"</span>,
+  <span class="k">"center"</span>: [<span class="n">-35.185</span>, <span class="n">149.140</span>],
+  <span class="k">"zoom"</span>: <span class="n">12</span>,
+  <span class="k">"suburbs"</span>: [<span class="s">"AMAROO"</span>, <span class="s">"BONNER"</span>, <span class="s">"CASEY"</span>, ...],
+  <span class="k">"happy_images"</span>: [<span class="s">"barr_happy.png"</span>, <span class="s">"Ricky_happy.png"</span>],
+  <span class="k">"sad_images"</span>: [<span class="s">"barr_sad.png"</span>, <span class="s">"Liz_sad.png"</span>, ...],
+  <span class="k">"ranks"</span>: { <span class="s">"90"</span>: <span class="s">"Light Rail Lord 🚋"</span>, <span class="s">"70"</span>: <span class="s">"G-Town Guru 🏘️"</span>, ... }
+}
+<span class="c">// ONE renderer serves Belconnen, Gungahlin, Tuggeranong, Inner, Woden — all via config.</span>
+<span class="c">// GeoJSON bundled + cached in SW, not fetched from GitHub.</span></pre>
+</div>
+
+<div class="schema-map">
+<div class="header"><h4>🧱 North vs South → BinarySortRenderer</h4></div>
+<pre>{
+  <span class="k">"game_type"</span>: <span class="s">"binary_sort"</span>,
+  <span class="k">"rounds"</span>: <span class="n">15</span>,
+  <span class="k">"time_per_round_ms"</span>: <span class="n">5000</span>,
+  <span class="k">"categories"</span>: { <span class="s">"NORTH"</span>: { <span class="k">"color"</span>: <span class="s">"#3498db"</span>, <span class="k">"label"</span>: <span class="s">"North"</span> },
+                    <span class="s">"SOUTH"</span>: { <span class="k">"color"</span>: <span class="s">"#e67e22"</span>, <span class="k">"label"</span>: <span class="s">"South"</span> } },
+  <span class="k">"items"</span>: [{ <span class="k">"name"</span>: <span class="s">"BRADDON"</span>, <span class="k">"category"</span>: <span class="s">"NORTH"</span> }, ...],
+  <span class="k">"divider_line"</span>: [[<span class="n">-35.29</span>, <span class="n">149.01</span>], [<span class="n">-35.29</span>, <span class="n">149.22</span>]]
+}
+<span class="c">// Reusable: "East vs West", "ACT vs NSW", "Pre-self-gov vs Post" — same renderer, different config.</span></pre>
+</div>
+
+<div class="schema-map">
+<div class="header"><h4>🎞️ Retro Canberra → TimelineGuessRenderer</h4></div>
+<pre>{
+  <span class="k">"game_type"</span>: <span class="s">"timeline_guess"</span>,
+  <span class="k">"date"</span>: <span class="s">"2026-03-22"</span>,
+  <span class="k">"title"</span>: <span class="s">"Flashback Friday"</span>,
+  <span class="k">"year_range"</span>: [<span class="n">1920</span>, <span class="n">2020</span>],
+  <span class="k">"photos"</span>: [
+    {
+      <span class="k">"image"</span>: <span class="s">"cdn/archive/1994-raiders-gf.jpg"</span>,
+      <span class="k">"year"</span>: <span class="n">1994</span>,
+      <span class="k">"credit"</span>: <span class="s">"Canberra Times"</span>,
+      <span class="k">"desc"</span>: <span class="s">"Raiders celebrate the 36-12 Grand Final demolition..."</span>
+    }
+  ]
+}
+<span class="c">// AI agent queries Valencia for photos with date metadata → generates this JSON weekly.</span>
+<span class="c">// Images served via Transform with responsive sizes + sepia variant.</span></pre>
+</div>
+
+<!-- ==================== SECTION 5: PROJECT STRUCTURE ==================== -->
+<h2>5. Project structure</h2>
+
+<pre>
+games.canberratimes.com.au/
+├── app/
+│   ├── layout.tsx              <span class="c">// Shared shell: header, Piano SDK, analytics init</span>
+│   ├── page.tsx                <span class="c">// Games Hub (daily challenge, game list, streak)</span>
+│   ├── crossword/page.tsx      <span class="c">// Loads CrosswordRenderer + today's config</span>
+│   ├── landmark/page.tsx       <span class="c">// Loads LocationGuessRenderer + today's config</span>
+│   ├── map/[region]/page.tsx   <span class="c">// Loads SuburbChallengeRenderer + region config</span>
+│   ├── north-vs-south/page.tsx <span class="c">// Loads BinarySortRenderer + config</span>
+│   ├── flashback/page.tsx      <span class="c">// Loads TimelineGuessRenderer + weekly config</span>
+│   └── api/
+│       ├── validate/route.ts   <span class="c">// Server-side answer validation (anti-cheat)</span>
+│       ├── score/route.ts      <span class="c">// Submit scores, update streaks</span>
+│       └── widget/route.ts     <span class="c">// JSON for Suzuka homepage embed</span>
+├── components/
+│   ├── GameShell.tsx           <span class="c">// Shared wrapper: header, score, streak, share</span>
+│   ├── ShareCard.tsx           <span class="c">// Generates shareable result image/text</span>
+│   ├── MapBase.tsx             <span class="c">// MapLibre wrapper (used by 3 games)</span>
+│   ├── renderers/
+│   │   ├── CrosswordRenderer.tsx
+│   │   ├── LocationGuessRenderer.tsx
+│   │   ├── SuburbChallengeRenderer.tsx
+│   │   ├── BinarySortRenderer.tsx
+│   │   └── TimelineGuessRenderer.tsx
+│   └── ui/                     <span class="c">// Buttons, modals, timer bar, confetti trigger</span>
+├── lib/
+│   ├── piano.ts                <span class="c">// Piano SDK wrapper: auth check, entitlement</span>
+│   ├── storage.ts              <span class="c">// idb-keyval: streaks, progress, offline queue</span>
+│   ├── analytics.ts            <span class="c">// PostHog event helpers with piano_uid</span>
+│   └── sanity.ts               <span class="c">// CMS client: fetch today's game configs</span>
+├── public/
+│   ├── manifest.json           <span class="c">// PWA manifest</span>
+│   ├── sw.js                   <span class="c">// Workbox service worker</span>
+│   └── geo/
+│       └── act-suburbs.json    <span class="c">// Self-hosted GeoJSON (cached by SW)</span>
+└── agents/
+    ├── trivia-agent.ts         <span class="c">// Runs on Cloud Function, queries Silverstone</span>
+    ├── flashback-agent.ts      <span class="c">// Queries Valencia for photos with dates</span>
+    ├── crossword-agent.ts      <span class="c">// Generates grids with local themes</span>
+    └── schemas/                <span class="c">// JSON schemas for validation</span>
+</pre>
+
+<!-- ==================== SECTION 6: DEPENDENCY BUDGET ==================== -->
+<h2>6. Dependency budget — keep it light</h2>
+<p class="detail"><em>Note: Sections 7-9 (Accessibility, Dark Mode, Hints) were added following a gap analysis against NYT Games' feature set.</em></p>
+
+<table>
+<tr><th>Dependency</th><th>Size (gzipped)</th><th>Purpose</th><th>Replaces</th></tr>
+<tr><td>Next.js (framework)</td><td>~85KB</td><td>SSR, routing, API routes</td><td>10+ separate HTML files</td></tr>
+<tr><td>React 19</td><td>~45KB</td><td>Component framework</td><td>Vanilla DOM manipulation</td></tr>
+<tr><td>MapLibre GL JS</td><td>~220KB</td><td>WebGL map rendering</td><td>Leaflet (180KB) — faster, vector tiles</td></tr>
+<tr><td>idb-keyval</td><td>~0.6KB</td><td>IndexedDB wrapper</td><td>Nothing (no persistence today)</td></tr>
+<tr><td>Workbox</td><td>~12KB</td><td>Service worker toolkit</td><td>Nothing (no SW today)</td></tr>
+<tr><td>canvas-confetti</td><td>~6KB</td><td>Celebration effects</td><td>Already using this</td></tr>
+<tr><td>PostHog JS</td><td>~20KB</td><td>Analytics</td><td>Nothing (no analytics today)</td></tr>
+<tr><td>Piano SDK</td><td>~15KB</td><td>Auth + paywall</td><td>Nothing (no auth today)</td></tr>
+<tr><td><strong>Total app shell</strong></td><td><strong>~95KB</strong></td><td colspan="2">First load (framework + shell, before game-specific code)</td></tr>
+<tr><td><strong>Per-game addition</strong></td><td><strong>~20-40KB</strong></td><td colspan="2">Game renderer + config JSON (code-split, loaded on demand)</td></tr>
+</table>
+
+<div class="callout">
+<strong>Performance target:</strong> App shell loads in &lt;100ms from SW cache. First contentful paint &lt;200ms. Time to interactive &lt;500ms. Lighthouse score 95+. Total transfer for first game play &lt;300KB (excluding map tiles which are streamed progressively).
+</div>
+
+<!-- ==================== SECTION 7: ACCESSIBILITY ==================== -->
+<h2>7. Accessibility (a11y) — WCAG 2.1 AA from day 1</h2>
+
+<div class="callout">
+<strong>Non-negotiable.</strong> Your audience is Canberra — 70%+ public servants. Government agencies mandate WCAG 2.1 AA compliance for digital products they engage with. ACM as a publisher also has obligations under the Disability Discrimination Act 1992. Building a11y in from the start costs 10% of what retrofitting later does.
+</div>
+
+<div class="stack-grid">
+
+<div class="stack-card">
+<h4><span class="dot" style="background:var(--accent)"></span> Keyboard navigation</h4>
+<div class="rec">Every game fully playable without a mouse</div>
+<div class="why">
+<strong>Crossword:</strong> Arrow keys to move between cells, Tab to jump to next word, Shift+Tab for previous, Enter to toggle across/down. Your prototype uses a hidden input hack for mobile — for desktop, implement proper keydown handlers on the grid with visible focus indicators.<br><br>
+<strong>Map games:</strong> This is the hardest one. Map polygons need to be focusable via Tab. Add an alternative text input: type suburb name instead of clicking. Dual-mode: visual click OR keyboard search.<br><br>
+<strong>North vs South:</strong> Already good — two buttons, arrow keys or 1/2 keys can map to North/South.<br><br>
+<strong>Flashback Friday:</strong> Slider needs arrow key increment (already native for range input), Enter to submit.
+</div>
+</div>
+
+<div class="stack-card">
+<h4><span class="dot" style="background:var(--green)"></span> Screen reader support</h4>
+<div class="rec">ARIA labels, live regions, semantic HTML</div>
+<div class="why">
+<strong>ARIA live regions:</strong> Score changes, timer countdowns, feedback messages ("Correct! +3 points") must be announced via <code>aria-live="polite"</code>. Without this, screen reader users get no feedback on their actions.<br><br>
+<strong>ARIA labels:</strong> Every interactive element needs a descriptive label. Map polygons: <code>aria-label="Suburb: Braddon"</code>. Crossword cells: <code>aria-label="Row 1, Column 3, 1 Across"</code>. Buttons: already labelled in your prototypes (good).<br><br>
+<strong>Game state announcements:</strong> "Round 3 of 10. Find: Telstra Tower. 8 seconds remaining." Announced on round start via an off-screen live region.
+</div>
+</div>
+
+<div class="stack-card">
+<h4><span class="dot" style="background:var(--amber)"></span> Colour-blind safe design</h4>
+<div class="rec">Never use colour alone to communicate state</div>
+<div class="why">
+<strong>Current problem:</strong> Your prototypes use green = correct, red = wrong, orange = missed. ~8% of males are red-green colour blind. These states are indistinguishable.<br><br>
+<strong>Fix:</strong> Add a secondary indicator alongside colour. Correct: green fill + checkmark icon. Wrong: red fill + X icon. Missed: orange fill + "?" icon. On the crossword: correct cell gets a subtle checkmark overlay, not just a colour change.<br><br>
+<strong>Implementation:</strong> Use pattern fills or icons. Add a "colour-blind mode" toggle in settings that switches to high-contrast patterns (stripes, dots, crosshatch) instead of relying on colour ramps. Store preference in IndexedDB.
+</div>
+</div>
+
+<div class="stack-card">
+<h4><span class="dot" style="background:var(--purple)"></span> Motion and timing</h4>
+<div class="rec">Respect prefers-reduced-motion, adjustable timers</div>
+<div class="why">
+<strong>Reduced motion:</strong> Your confetti celebrations, shake animations, and map fly-to transitions should be wrapped in <code>@media (prefers-reduced-motion: no-preference)</code>. Users with vestibular disorders can disable them.<br><br>
+<strong>Timed games:</strong> Hunt the Landmark (8 sec) and North vs South (5 sec) are accessibility barriers for users with motor or cognitive disabilities. Add an "Extended time" mode (2x timer) in settings. This doesn't affect scoring fairness — store it as a separate leaderboard category or simply don't penalise time in accessibility mode.<br><br>
+<strong>Auto-advance:</strong> Your 3-second auto-advance between rounds (setTimeout) should be optional. Add a "Next" button that also works, so users can control the pace.
+</div>
+</div>
+
+</div>
+
+<table>
+<tr><th>WCAG criterion</th><th>Requirement</th><th>Implementation</th></tr>
+<tr><td>1.1.1 Non-text content</td><td>All images have alt text</td><td>Archive photos: descriptive alt from CMS. Map: SVG title elements. Reaction images: <code>alt="Correct reaction"</code></td></tr>
+<tr><td>1.4.1 Use of colour</td><td>Colour not sole means of conveying info</td><td>Add icons/patterns alongside colour states. Colour-blind toggle in settings.</td></tr>
+<tr><td>1.4.3 Contrast</td><td>4.5:1 minimum for text</td><td>Audit all text/background combos. Your prototype's #888 on white is 3.5:1 — fails. Fix to #666 minimum.</td></tr>
+<tr><td>1.4.11 Non-text contrast</td><td>3:1 for UI components</td><td>Focus indicators, button borders, grid lines all need sufficient contrast.</td></tr>
+<tr><td>2.1.1 Keyboard</td><td>All functionality via keyboard</td><td>Tab order, arrow key navigation, Enter/Space for actions. Focus trap in modals.</td></tr>
+<tr><td>2.2.1 Timing adjustable</td><td>Users can extend/disable time limits</td><td>Extended time mode for timed games. Pause button. No auto-advance without user control.</td></tr>
+<tr><td>2.3.1 Flashes</td><td>No content flashes >3 times/sec</td><td>Confetti is safe. Error shake animation is safe. Verify timer bar doesn't flash at expiry.</td></tr>
+<tr><td>4.1.2 Name, role, value</td><td>All UI components have accessible names</td><td>ARIA labels on custom components. Role attributes on game grid cells.</td></tr>
+</table>
+
+<div class="callout">
+<strong>Testing:</strong> Run Lighthouse accessibility audit on every PR. Manual testing with VoiceOver (macOS/iOS) and TalkBack (Android) monthly. Keyboard-only testing as part of QA for every new game renderer. Consider engaging the ACT Disability community for user testing before launch.
+</div>
+
+<!-- ==================== SECTION 8: DARK MODE ==================== -->
+<h2>8. Dark mode — built into the design system, not bolted on</h2>
+
+<div class="callout">
+<strong>Why Phase 1:</strong> Your games are played on the 7am bus to Civic, in bed before sleep, and during boring meetings. All low-light scenarios. Dark mode isn't a preference — it's when most of your engagement will happen. NYT shipped it across the entire Games app. Build it in from day 1 or you'll retrofit every component later.
+</div>
+
+<div class="stack-grid">
+
+<div class="stack-card">
+<h4><span class="dot" style="background:var(--accent)"></span> Implementation approach</h4>
+<div class="rec">Tailwind dark: variant + CSS custom properties</div>
+<div class="why">
+<strong>Tailwind 4:</strong> Use <code>dark:</code> variants throughout. <code>className="bg-white dark:bg-gray-900"</code>. This is zero-cost at build time — Tailwind only generates classes you use.<br><br>
+<strong>CSS custom properties for game-specific colours:</strong>
+<pre>
+:root {
+  --game-bg: #ffffff;
+  --game-surface: #f8f9fa;
+  --game-text: #111111;
+  --game-correct: #22c55e;
+  --game-wrong: #ef4444;
+  --game-highlight: #e3f2fd;
+  --game-cell: #ffffff;
+  --game-cell-black: #111111;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --game-bg: #0a0a0a;
+    --game-surface: #1a1a1a;
+    --game-text: #e8e8e8;
+    --game-correct: #4ade80;
+    --game-wrong: #f87171;
+    --game-highlight: #1e3a5f;
+    --game-cell: #2a2a2a;
+    --game-cell-black: #000000;
+  }
+}</pre>
+<strong>User override:</strong> Respect system preference by default, but offer a manual toggle (Light / Dark / System) in settings. Store in IndexedDB.
+</div>
+</div>
+
+<div class="stack-card">
+<h4><span class="dot" style="background:var(--amber)"></span> Per-game considerations</h4>
+<div class="rec">Each game type has dark mode nuances</div>
+<div class="why">
+<strong>Crossword:</strong> White cells become dark gray (#2a2a2a). Black squares stay black. Active cell highlight shifts from yellow to a muted gold. Cell borders become subtle (#3a3a3a) instead of #111. Text inverts to white.<br><br>
+<strong>Map games:</strong> CartoDB already provides a dark tile layer (<code>dark_nolabels</code> instead of <code>light_nolabels</code>). Swap the tile URL based on theme. Suburb polygon fills need adjusted opacity — your current 0.4 opacity on blue works on light maps but washes out on dark. Increase to 0.6.<br><br>
+<strong>Flashback Friday:</strong> The sepia filter works on both themes — it's applied to the image, not the background. The controls area and fact box need dark surface colours. The dramatic sepia-to-colour reveal actually looks better on a dark background.<br><br>
+<strong>Reaction images:</strong> Your celebrity cutouts have transparent backgrounds with dark edges (they were cut from dark photos). They'll look native on dark mode. No changes needed — this is a lucky win.<br><br>
+<strong>Share cards:</strong> Generate two variants of the shareable result card — light and dark — based on the user's current theme. Or always generate on a branded dark background for consistency across platforms.
+</div>
+</div>
+
+</div>
+
+<table>
+<tr><th>Element</th><th>Light mode</th><th>Dark mode</th><th>Notes</th></tr>
+<tr><td>Page background</td><td>#ffffff</td><td>#0a0a0a</td><td>True black for OLED battery savings</td></tr>
+<tr><td>Surface / cards</td><td>#f8f9fa</td><td>#1a1a1a</td><td>Subtle elevation over background</td></tr>
+<tr><td>Primary text</td><td>#111111</td><td>#e8e8e8</td><td>Never pure white on dark — too harsh</td></tr>
+<tr><td>Secondary text</td><td>#666666</td><td>#999999</td><td>Must pass 4.5:1 contrast on surface</td></tr>
+<tr><td>Borders</td><td>#e0e0e0</td><td>#2a2a2a</td><td>Visible but not distracting</td></tr>
+<tr><td>Correct state</td><td>#22c55e</td><td>#4ade80</td><td>Brighter green on dark for visibility</td></tr>
+<tr><td>Wrong state</td><td>#ef4444</td><td>#f87171</td><td>Softer red on dark to reduce glare</td></tr>
+<tr><td>CT brand blue</td><td>#00558c</td><td>#3b9fd4</td><td>Lighter variant on dark to maintain contrast</td></tr>
+<tr><td>Map tiles</td><td>CartoDB light_nolabels</td><td>CartoDB dark_nolabels</td><td>Swap tile URL on theme change</td></tr>
+</table>
+
+<!-- ==================== SECTION 9: HINTS SYSTEM ==================== -->
+<h2>9. Hints system — reduce abandonment, not difficulty</h2>
+
+<div class="callout">
+<strong>Why this matters:</strong> A player who gets stuck and abandons a puzzle has a broken streak, a bad experience, and a higher churn probability. A player who uses a hint and completes the puzzle has an intact streak, a small dopamine hit from completion, and returns tomorrow. NYT offers hints across Spelling Bee, Crossword, and Connections. Hints protect retention at the cost of a slightly easier game — that's a trade worth making.
+</div>
+
+<div class="stack-grid">
+
+<div class="stack-card">
+<h4><span class="dot" style="background:var(--accent)"></span> Crossword hints</h4>
+<div class="rec">3 tiers of progressive assistance</div>
+<div class="why">
+<strong>Tier 1 — Check cell:</strong> Tap "Check" on a single cell. If wrong, it flashes red and clears. If correct, it gets a subtle lock icon. Player still needs to find the right letter. Cost: free, unlimited.<br><br>
+<strong>Tier 2 — Reveal letter:</strong> Reveals one correct letter in the active word. Cost: 1 hint token per use. Score penalty: -50 points per reveal.<br><br>
+<strong>Tier 3 — Reveal word:</strong> Fills in the entire active word. Cost: 2 hint tokens. Score penalty: word doesn't count toward "no hints" badge.<br><br>
+<strong>Hint tokens:</strong> Players get 3 free hint tokens per day. Resets at midnight. Premium subscribers get 5. This creates a resource management layer — do you spend your hint on 1-Across or save it for the tricky down clue?
+</div>
+</div>
+
+<div class="stack-card">
+<h4><span class="dot" style="background:var(--green)"></span> Hunt the Landmark hints</h4>
+<div class="rec">Progressive map narrowing</div>
+<div class="why">
+<strong>Tier 1 — Zoom hint:</strong> Map auto-zooms to the correct district (e.g., Inner North). Reduces the search area by ~80%. Cost: 1 hint token. Timer pauses during hint animation.<br><br>
+<strong>Tier 2 — Distance ring:</strong> Shows a circle (2km radius) centered on the correct location. Cost: 2 hint tokens. Significantly narrows the target but still requires precision.<br><br>
+<strong>Implementation:</strong> Both hints are just Leaflet/MapLibre operations — <code>map.flyTo()</code> and <code>L.circle()</code>. No server-side changes needed. Hint usage tracked in analytics for difficulty calibration.
+</div>
+</div>
+
+<div class="stack-card">
+<h4><span class="dot" style="background:var(--amber)"></span> Map games + North vs South hints</h4>
+<div class="rec">Eliminate wrong answers, brief reveal</div>
+<div class="why">
+<strong>Map games — Neighbourhood hint:</strong> Highlights the 2-3 suburbs adjacent to the target. "It's near one of these." Cost: 1 hint token. Reduces options without giving the answer.<br><br>
+<strong>North vs South — Brief flash:</strong> The target suburb flashes on the map for 1 second before disappearing. Player sees the location, then answers. Cost: 1 hint token. Timer pauses during flash.<br><br>
+<strong>North vs South — 50/50:</strong> Not applicable (already binary). Instead, add a "Skip" that doesn't break the streak but scores 0. Already exists in your prototype.
+</div>
+</div>
+
+<div class="stack-card">
+<h4><span class="dot" style="background:var(--purple)"></span> Flashback Friday hints</h4>
+<div class="rec">Decade bracket + contextual clue</div>
+<div class="why">
+<strong>Tier 1 — Decade hint:</strong> Narrows the slider range to the correct decade (e.g., "This photo is from the 1990s"). Slider min/max updates visually. Cost: 1 hint token.<br><br>
+<strong>Tier 2 — Context clue:</strong> Reveals a text hint from the CMS: "This was taken during a sporting event." Doesn't give the year but provides context. Cost: 1 hint token.<br><br>
+<strong>CMS schema addition:</strong> Each photo config gets a <code>hint_decade</code> (auto-derived from year) and <code>hint_context</code> (written by editor/AI). Example: <code>{ "hint_decade": "1990s", "hint_context": "Taken at a Grand Final" }</code>
+</div>
+</div>
+
+</div>
+
+<h3>Hint system architecture</h3>
+
+<pre>
+<span class="c">// Hint state stored in IndexedDB per user per day</span>
+{
+  <span class="k">"date"</span>: <span class="s">"2026-03-22"</span>,
+  <span class="k">"hints_remaining"</span>: <span class="n">3</span>,        <span class="c">// Resets daily at midnight</span>
+  <span class="k">"hints_used"</span>: [
+    { <span class="k">"game"</span>: <span class="s">"crossword"</span>, <span class="k">"type"</span>: <span class="s">"reveal_letter"</span>, <span class="k">"clue"</span>: <span class="s">"1A"</span> },
+    { <span class="k">"game"</span>: <span class="s">"landmark"</span>, <span class="k">"type"</span>: <span class="s">"zoom_hint"</span>, <span class="k">"round"</span>: <span class="n">4</span> }
+  ]
+}
+
+<span class="c">// Analytics events</span>
+<span class="f">track</span>(<span class="s">"hint_used"</span>, {
+  <span class="k">game_type</span>: <span class="s">"crossword"</span>,
+  <span class="k">hint_tier</span>: <span class="n">2</span>,
+  <span class="k">round</span>: <span class="n">3</span>,
+  <span class="k">time_before_hint</span>: <span class="n">45</span>,      <span class="c">// Seconds struggling before using hint</span>
+  <span class="k">completed_after_hint</span>: <span class="k">true</span> <span class="c">// Did the hint save the session?</span>
+})
+</pre>
+
+<div class="callout">
+<strong>Difficulty calibration feedback loop:</strong> Track <code>hint_used</code> events per question/round. If >40% of players use a hint on the same trivia question or crossword clue, flag it in the CMS for the editor. Over time, this data trains the AI agents to generate better-calibrated content. The hints system isn't just a player feature — it's a content quality signal.
+</div>
+
+<!-- ==================== SECTION 10: BUILD SEQUENCE ==================== -->
+<h2>10. Build sequence — what to ship first</h2>
+
+<table>
+<tr><th>Week</th><th>Deliverable</th><th>Why this order</th></tr>
+<tr><td>1-2</td><td>Next.js app shell + GameShell + Piano integration + PostHog + <strong>design system with dark mode + a11y foundations</strong></td><td>Foundation. Auth, analytics, dark mode, and accessibility baked in from line 1. Not retrofitted.</td></tr>
+<tr><td>3</td><td>BinarySortRenderer (North vs South) as the free daily game + <strong>keyboard controls + screen reader announcements</strong></td><td>Your best game mechanic. Ship accessible from the start. Includes extended-time toggle.</td></tr>
+<tr><td>4</td><td>Service worker + IndexedDB persistence + streaks + <strong>hint token system (daily reset, storage, tracking)</strong></td><td>Offline support + retention mechanics + hint infrastructure ready for all games.</td></tr>
+<tr><td>5-6</td><td>MapLibre integration + SuburbChallengeRenderer + self-hosted GeoJSON + <strong>dark tile layer + keyboard suburb search fallback</strong></td><td>Unlocks 3 map-based games. Dark map tiles. Accessible alternative input for map interaction.</td></tr>
+<tr><td>7</td><td>LocationGuessRenderer (Hunt the Landmark) + <strong>zoom hint + distance ring hint</strong></td><td>Reuses MapBase. Hints reduce the high abandonment risk of timed map games.</td></tr>
+<tr><td>8</td><td>CrosswordRenderer + server-side validation + <strong>check cell / reveal letter / reveal word hints + full keyboard navigation</strong></td><td>Most complex renderer. Hints critical here — crossword abandonment is the #1 churn risk.</td></tr>
+<tr><td>9</td><td>TimelineGuessRenderer (Flashback Friday) + image pipeline + <strong>decade hint + context hint</strong></td><td>Depends on Transform integration. Hints fed from CMS hint fields.</td></tr>
+<tr><td>10</td><td>Sanity CMS setup + first AI agent + <strong>hint_context and hint_decade fields in schemas</strong></td><td>Content pipeline goes live. Hint content generated alongside game content.</td></tr>
+<tr><td>11-12</td><td>Games Hub page + Suzuka widget embed + push notifications + share cards + <strong>colour-blind mode toggle + a11y audit</strong></td><td>Distribution layer. Final accessibility audit before public launch. Colour-blind settings page.</td></tr>
+</table>
+
+<div class="callout callout-warn">
+<strong>Ship North vs South as the free game by week 3.</strong> Don't wait for all 5 games. Get one game live, measure engagement, prove the concept, then layer in the rest. Every week without a live game is a week without data. <strong>Dark mode and keyboard navigation ship with week 1-2 design system — not as a separate workstream.</strong>
+</div>
+
+</div>
+</body>
+</html>
