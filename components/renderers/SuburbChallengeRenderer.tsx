@@ -150,7 +150,8 @@ export function SuburbChallengeRenderer({
           };
         }
 
-        map.addSource(SOURCE_ID, { type: "geojson", data: regionDataRef.current });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        map.addSource(SOURCE_ID, { type: "geojson", data: regionDataRef.current as any });
 
         // Fill — blue tint, clickable
         map.addLayer({

@@ -147,7 +147,7 @@ export const MapBase = forwardRef<MapBaseHandle, MapBaseProps>(
           map.on("load", () => {
             if (cancelled) { map?.remove(); return; }
             mapRef.current = map;
-            onReadyRef.current?.(map);
+            if (map) onReadyRef.current?.(map);
           });
 
           map.on("error", (e) => {
