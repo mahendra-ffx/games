@@ -11,70 +11,77 @@ export const dynamic = "force-dynamic";
 
 // ── Game definitions ───────────────────────────────────────────────────────────
 
-const FEATURED_GAME = {
-  id: "north-vs-south",
-  href: "/north-vs-south",
-  title: "North vs South",
-  category: "Free Daily",
-  description:
-    "Is that Canberra suburb north or south of the lake? Race the clock — 15 rounds, 5 seconds each. The fastest fingers in the ACT play every day.",
-  emoji: "🗺️",
-  isFree: true,
-  gradient: "linear-gradient(135deg, #0c4a6e 0%, #0369a1 45%, #0ea5e9 100%)",
-  accentColor: "#0ea5e9",
-  tagline: "2 min · Free to play · Share your score",
-} as const;
+interface GameDef {
+  id: string;
+  href: string;
+  title: string;
+  emoji: string;
+  color: string;          // flat background for NYT-style header
+  badge?: string;         // "FREE" | "NEW" corner badge
+  actions: { label: string; href: string }[];
+  description?: string;   // optional subtitle below title
+}
 
-const GAMES = [
+const GAMES: GameDef[] = [
+  {
+    id: "north-vs-south",
+    href: "/north-vs-south",
+    title: "North vs South",
+    emoji: "🧭",
+    color: "#0c4a6e",
+    badge: "FREE",
+    description: "North or south of the lake? 15 rounds, beat the clock.",
+    actions: [
+      { label: "Play", href: "/north-vs-south" },
+    ],
+  },
+  {
+    id: "crossword",
+    href: "/crossword",
+    title: "Daily Crossword",
+    emoji: "✏️",
+    color: "#4c1d95",
+    description: "5x5 grid with emoji clues. A new puzzle every day.",
+    actions: [
+      { label: "Play", href: "/crossword" },
+      { label: "Archive", href: "/archive" },
+    ],
+  },
   {
     id: "suburb-challenge",
     href: "/map/inner",
     title: "Suburb Challenge",
-    category: "Map Game",
-    description:
-      "Click the highlighted suburb on the map. Inner Canberra is free — unlock Belconnen, Gungahlin, Tuggeranong and Woden.",
     emoji: "📍",
-    isFree: false,
-    gradient: "linear-gradient(135deg, #064e3b 0%, #059669 60%, #34d399 100%)",
-    accentColor: "#10b981",
+    color: "#064e3b",
+    actions: [
+      { label: "Play", href: "/map/inner" },
+      { label: "All Regions", href: "/map/inner" },
+    ],
   },
   {
     id: "landmark-hunt",
     href: "/landmark",
     title: "Hunt the Landmark",
-    category: "Map Game",
-    description:
-      "60+ Canberra landmarks. 8 seconds per round. Pin the exact spot on the map before time runs out.",
     emoji: "🏛️",
-    isFree: false,
-    gradient: "linear-gradient(135deg, #78350f 0%, #b45309 50%, #fbbf24 100%)",
-    accentColor: "#f59e0b",
-  },
-  {
-    id: "crossword",
-    href: "/crossword",
-    title: "Daily Mini Crossword",
-    category: "Word Game",
-    description:
-      "A fresh 5×5 crossword every day with emoji clues and locally themed answers. How fast can you finish?",
-    emoji: "✏️",
-    isFree: false,
-    gradient: "linear-gradient(135deg, #4c1d95 0%, #7c3aed 55%, #a78bfa 100%)",
-    accentColor: "#8b5cf6",
+    color: "#78350f",
+    badge: "NEW",
+    actions: [
+      { label: "Play", href: "/landmark" },
+    ],
   },
   {
     id: "flashback",
     href: "/flashback",
     title: "Flashback Friday",
-    category: "Archive",
-    description:
-      "Guess the year of iconic Canberra archive photos. Watch them transform from sepia to full colour as you get closer.",
     emoji: "📷",
-    isFree: false,
-    gradient: "linear-gradient(135deg, #44403c 0%, #78716c 50%, #d4a574 100%)",
-    accentColor: "#a8956a",
+    color: "#44403c",
+    description: "Guess the year from Canberra archive photos.",
+    actions: [
+      { label: "Play", href: "/flashback" },
+      { label: "Past Puzzles", href: "/archive" },
+    ],
   },
-] as const;
+];
 
 const MAP_REGIONS = [
   { href: "/map/inner", label: "Inner Canberra", free: true },
@@ -119,31 +126,16 @@ export default function GamesHubPage() {
 
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-8 lg:py-12">
 
-        {/* ── Featured hero game ─────────────────────────────────── */}
-        <section className="mb-10">
-          <FeaturedGameCard game={FEATURED_GAME} />
-        </section>
+        {/* ── Section heading ──────────────────────────────────── */}
+        <h2
+          className="type-hero text-center mb-8"
+          style={{ color: "var(--text-primary)", fontSize: "clamp(1.5rem, 3vw, 2rem)" }}
+        >
+          Today&apos;s Games
+        </h2>
 
-        {/* ── Section divider ────────────────────────────────────── */}
-        <div className="flex items-center gap-4 mb-6">
-          <h2
-            className="type-headline flex-shrink-0"
-            style={{ color: "var(--text-primary)" }}
-          >
-            More Games
-          </h2>
-          <div className="flex-1 h-px" style={{ backgroundColor: "var(--border)" }} />
-          <Link
-            href="/archive"
-            className="type-label flex-shrink-0 transition-opacity hover:opacity-70"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            Archive →
-          </Link>
-        </div>
-
-        {/* ── Game card grid ─────────────────────────────────────── */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
+        {/* ── NYT-inspired game card grid ──────────────────────── */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
           {GAMES.map((game) => (
             <GameCard key={game.id} game={game} />
           ))}
@@ -174,7 +166,6 @@ export default function GamesHubPage() {
                 style={{
                   borderColor: r.free ? "var(--color-ct-blue)" : "var(--border-strong)",
                   color: r.free ? "var(--color-ct-blue)" : "var(--text-secondary)",
-                  backgroundColor: r.free ? "transparent" : "transparent",
                 }}
               >
                 {r.label}
@@ -216,166 +207,83 @@ export default function GamesHubPage() {
   );
 }
 
-// ── Featured hero card ─────────────────────────────────────────────────────────
-
-interface FeaturedGame {
-  href: string;
-  title: string;
-  category: string;
-  description: string;
-  emoji: string;
-  gradient: string;
-  accentColor: string;
-  tagline: string;
-}
-
-function FeaturedGameCard({ game }: { game: FeaturedGame }) {
-  return (
-    <article
-      className="overflow-hidden rounded-xl"
-      style={{
-        backgroundColor: "var(--bg-surface)",
-        border: `1px solid var(--border)`,
-        boxShadow: "var(--shadow-card)",
-      }}
-    >
-      <div className="grid grid-cols-1 lg:grid-cols-2">
-        {/* Thumbnail — gradient with emoji */}
-        <div
-          className="relative flex items-center justify-center"
-          style={{
-            background: game.gradient,
-            minHeight: "260px",
-          }}
-          aria-hidden="true"
-        >
-          {/* Decorative map grid lines */}
-          <div
-            className="absolute inset-0 opacity-10"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)",
-              backgroundSize: "40px 40px",
-            }}
-          />
-          <span className="relative text-8xl drop-shadow-lg select-none">{game.emoji}</span>
-          {/* Free badge */}
-          <span
-            className="absolute top-4 left-4 type-label px-3 py-1 rounded-full text-white text-xs"
-            style={{ backgroundColor: "rgba(0,0,0,0.35)", backdropFilter: "blur(4px)" }}
-          >
-            FREE DAILY
-          </span>
-        </div>
-
-        {/* Content */}
-        <div className="flex flex-col justify-center p-7 lg:p-10">
-          <p className="type-label mb-2" style={{ color: "var(--text-secondary)" }}>
-            {game.category.toUpperCase()}
-          </p>
-          <h2
-            className="type-hero mb-3"
-            style={{ color: "var(--text-primary)", fontSize: "clamp(1.5rem, 3vw, 2.25rem)" }}
-          >
-            {game.title}
-          </h2>
-          <p
-            className="type-body mb-2"
-            style={{ color: "var(--text-secondary)", lineHeight: "1.65" }}
-          >
-            {game.description}
-          </p>
-          <p className="type-label mb-6" style={{ color: "var(--text-muted)" }}>
-            {game.tagline}
-          </p>
-          <Link
-            href={game.href}
-            className="type-button inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-white transition-opacity hover:opacity-90 self-start"
-            style={{ backgroundColor: "var(--color-ct-blue)" }}
-          >
-            Play Now →
-          </Link>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-// ── Standard game card (Figma editorial style) ─────────────────────────────────
-
-interface GameDef {
-  href: string;
-  title: string;
-  category: string;
-  description: string;
-  emoji: string;
-  isFree: boolean;
-  gradient: string;
-  accentColor: string;
-}
+// ── NYT-inspired game card ────────────────────────────────────────────────────
 
 function GameCard({ game }: { game: GameDef }) {
   return (
     <article
-      className="game-card flex flex-col overflow-hidden rounded-xl group"
+      className="flex flex-col overflow-hidden rounded-xl"
       style={{
         backgroundColor: "var(--bg-surface)",
-        border: `1px solid var(--border)`,
+        border: "1px solid var(--border)",
       }}
     >
-      {/* Thumbnail */}
+      {/* Colored header with emoji icon */}
       <div
-        className="relative flex items-center justify-center overflow-hidden"
-        style={{ background: game.gradient, height: "160px" }}
+        className="relative flex items-center justify-center"
+        style={{ backgroundColor: game.color, height: "180px" }}
         aria-hidden="true"
       >
-        {/* Subtle grid pattern */}
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
-            backgroundSize: "28px 28px",
-          }}
-        />
-        <span className="relative text-5xl drop-shadow select-none transition-transform duration-300 group-hover:scale-110">
-          {game.emoji}
-        </span>
-        {/* Premium lock badge */}
-        {!game.isFree && (
+        <span className="text-7xl select-none drop-shadow-lg">{game.emoji}</span>
+
+        {/* Corner badge (FREE / NEW) */}
+        {game.badge && (
           <span
-            className="absolute top-3 right-3 type-label px-2 py-0.5 rounded text-white text-xs"
-            style={{ backgroundColor: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }}
+            className="absolute top-3 right-3 type-label px-2.5 py-1 rounded text-white text-xs tracking-wider"
+            style={{
+              backgroundColor: game.badge === "FREE" ? "var(--color-ct-blue)" : "#111827",
+            }}
           >
-            PREMIUM
+            {game.badge}
           </span>
         )}
       </div>
 
-      {/* Body */}
-      <div className="flex flex-col flex-1 p-4">
-        <p className="type-label mb-1" style={{ color: "var(--color-gray-500)" }}>
-          {game.category.toUpperCase()}
-        </p>
+      {/* Card body */}
+      <div className="flex flex-col flex-1 px-5 pt-5 pb-4 text-center">
+        {/* Game title — Playfair Display */}
         <h3
-          className="type-headline mb-2"
-          style={{ color: "var(--text-primary)", fontSize: "1.1rem" }}
+          className="type-headline mb-1"
+          style={{
+            color: "var(--text-primary)",
+            fontSize: "1.25rem",
+            fontWeight: 600,
+          }}
         >
           {game.title}
         </h3>
-        <p
-          className="type-body flex-1 mb-4 text-sm"
-          style={{ color: "var(--text-secondary)", lineHeight: "1.55" }}
-        >
-          {game.description}
-        </p>
-        <Link
-          href={game.href}
-          className="type-button text-center py-2.5 rounded-lg text-white text-xs transition-opacity hover:opacity-90"
-          style={{ backgroundColor: "var(--color-ct-blue)" }}
-        >
-          {game.isFree ? "PLAY FREE" : "PLAY →"}
-        </Link>
+
+        {/* Optional short description */}
+        {game.description && (
+          <p
+            className="type-body text-sm mb-3"
+            style={{ color: "var(--text-secondary)", lineHeight: "1.5" }}
+          >
+            {game.description}
+          </p>
+        )}
+
+        {/* Spacer to push buttons to bottom */}
+        <div className="flex-1" />
+
+        {/* Action buttons — outlined pill style like NYT */}
+        <div className="flex flex-col gap-2 mt-3">
+          {game.actions.map((action) => (
+            <Link
+              key={action.label}
+              href={action.href}
+              className="pill-btn type-button py-2.5 rounded-full border text-center text-sm"
+              style={{
+                borderColor: "var(--border-strong)",
+                color: "var(--text-primary)",
+                backgroundColor: "transparent",
+              }}
+              onMouseEnter={undefined}
+            >
+              {action.label}
+            </Link>
+          ))}
+        </div>
       </div>
     </article>
   );

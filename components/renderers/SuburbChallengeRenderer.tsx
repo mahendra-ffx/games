@@ -124,24 +124,33 @@ export function SuburbChallengeRenderer({
 
   // ── Map init ────────────────────────────────────────────────────────────────
 
+  // Cache filtered GeoJSON so re-init (after theme change) doesn't re-fetch
+  const regionDataRef = useRef<Record<string, unknown> | null>(null);
+
   const initMapLayers = useCallback(
     async (map: MapLibreMap) => {
       mapInstanceRef.current = map;
       try {
-        const res = await fetch("/geo/act-suburbs.json");
-        const geojson = await res.json();
+        // Remove existing layers/source if re-initialising (e.g. after theme switch)
+        if (map.getLayer(FILL_LAYER)) map.removeLayer(FILL_LAYER);
+        if (map.getLayer(LINE_LAYER)) map.removeLayer(LINE_LAYER);
+        if (map.getSource(SOURCE_ID)) map.removeSource(SOURCE_ID);
 
-        // Filter to just this region's suburbs (by suburb name in config list)
-        const suburbSet = new Set(config.suburbs.map((s) => s.toUpperCase()));
-        const regionData = {
-          ...geojson,
-          features: geojson.features.filter(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (f: any) => suburbSet.has((f.properties?.suburb ?? "").toUpperCase())
-          ),
-        };
+        // Fetch and filter GeoJSON (cached after first load)
+        if (!regionDataRef.current) {
+          const res = await fetch("/geo/act-suburbs.json");
+          const geojson = await res.json();
+          const suburbSet = new Set(config.suburbs.map((s) => s.toUpperCase()));
+          regionDataRef.current = {
+            ...geojson,
+            features: geojson.features.filter(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (f: any) => suburbSet.has((f.properties?.suburb ?? "").toUpperCase())
+            ),
+          };
+        }
 
-        map.addSource(SOURCE_ID, { type: "geojson", data: regionData });
+        map.addSource(SOURCE_ID, { type: "geojson", data: regionDataRef.current });
 
         // Fill — blue tint, clickable
         map.addLayer({

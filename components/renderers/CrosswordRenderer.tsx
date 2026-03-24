@@ -152,6 +152,7 @@ export function CrosswordRenderer({
 
   const [direction, setDirection] = useState<Direction>("across");
   const [activeCell, setActiveCell] = useState<[number, number]>([0, 0]);
+  const [showIntro, setShowIntro] = useState(true);
   const [completed, setCompleted] = useState(false);
   const [showWin, setShowWin] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
@@ -414,6 +415,65 @@ export function CrosswordRenderer({
         }
       `}</style>
 
+      {/* Intro — "How to Play" modal, same style as North vs South */}
+      {showIntro && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
+        >
+          <div
+            className="w-full rounded-2xl text-center shadow-xl"
+            style={{
+              maxWidth: 400,
+              margin: "0 16px",
+              backgroundColor: "rgba(255,255,255,0.97)",
+              backdropFilter: "blur(10px)",
+              padding: "28px 24px 24px",
+              boxShadow: "0 10px 40px rgba(0,0,0,0.35)",
+            }}
+          >
+            <h2
+              className="font-serif font-medium mb-5"
+              style={{ fontSize: "1.75rem", color: "#00558c", lineHeight: 1.2 }}
+            >
+              How to Play
+            </h2>
+
+            <ol className="text-left space-y-4 mb-6" style={{ color: "#444", fontSize: 15, lineHeight: 1.5 }}>
+              <li className="flex gap-3">
+                <span className="shrink-0 font-semibold" style={{ color: "#333" }}>1.</span>
+                <span>Tap any white square to highlight the word.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="shrink-0 font-semibold" style={{ color: "#333" }}>2.</span>
+                <span>Use the clues to solve the daily mini crossword.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="shrink-0 font-semibold" style={{ color: "#333" }}>3.</span>
+                <span>
+                  Tap the same square again to switch between{" "}
+                  <strong style={{ color: "#333" }}>Across</strong> and{" "}
+                  <strong style={{ color: "#333" }}>Down</strong>.
+                </span>
+              </li>
+            </ol>
+
+            <button
+              onClick={() => {
+                setShowIntro(false);
+                // Focus first cell after intro closes
+                cellRefs.current[0]?.[0]?.focus();
+              }}
+              autoFocus
+              className="w-full type-button py-4 rounded-2xl text-white font-semibold"
+              style={{ backgroundColor: "#2980b9", fontSize: 16 }}
+            >
+              Start Playing
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* P1-3: Win overlay */}
       {showWin && (
         <div
@@ -452,10 +512,11 @@ export function CrosswordRenderer({
           className="grid mx-auto mb-4 select-none"
           style={{
             gridTemplateColumns: `repeat(${size}, ${cellSize}px)`,
-            gap: "2px",
-            width: `${size * cellSize + (size - 1) * 2}px`,
-            border: "3px solid var(--color-gray-900)",
-            backgroundColor: "var(--color-gray-900)",
+            gap: "1px",
+            width: `${size * cellSize + (size - 1)}px`,
+            padding: "2px",
+            border: "2px solid var(--color-gray-900)",
+            backgroundColor: "var(--color-gray-300)",
             boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
           }}
           role="grid"
@@ -505,8 +566,8 @@ export function CrosswordRenderer({
                     <>
                       {clueNum !== undefined && (
                         <span
-                          className="absolute top-0.5 left-0.5 leading-none pointer-events-none"
-                          style={{ fontSize: "9px", color: "var(--text-secondary)", zIndex: 1 }}
+                          className="absolute leading-none pointer-events-none"
+                          style={{ top: 3, left: 4, fontSize: "13px", fontWeight: 500, color: "var(--text-secondary)", zIndex: 1 }}
                           aria-hidden="true"
                         >
                           {clueNum}
@@ -542,9 +603,11 @@ export function CrosswordRenderer({
                           color: textColor,
                           fontSize: Math.max(14, cellSize * 0.42),
                           caretColor: "transparent",
-                          border: isActive
-                            ? "2px solid var(--color-ct-blue)"
-                            : "1px solid var(--color-gray-300)",
+                          border: "none",
+                          outline: isActive
+                            ? "3px solid var(--color-ct-blue)"
+                            : "none",
+                          outlineOffset: "-3px",
                           // P1-1: Shake animation on incorrect
                           animation:
                             cell.state === "incorrect"

@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback } from "react";
-import { GameShell } from "@/components/GameShell";
 import { LocationGuessRenderer } from "@/components/renderers/LocationGuessRenderer";
 import { trackGameComplete } from "@/lib/analytics";
 import { saveProgress, getTodayAEDT } from "@/lib/storage";
@@ -39,14 +38,10 @@ export function LandmarkGame({ config }: { config: LandmarkHuntConfig }) {
     [gameId]
   );
 
+  // Full-bleed: fills all of <main> (flex-1 flex flex-col set on <main> in layout.tsx)
   return (
-    <GameShell
-      gameType="landmark_hunt"
-      gameId={gameId}
-      title="Hunt the Landmark"
-      isPremium={true}
-    >
+    <div className="flex-1 flex flex-col min-h-0">
       <LocationGuessRenderer config={config} onComplete={handleComplete} />
-    </GameShell>
+    </div>
   );
 }

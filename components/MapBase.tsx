@@ -17,6 +17,7 @@ import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { captureGameError } from "@/lib/sentry";
 import type { Map as MapLibreMap, LngLatLike } from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 
 export interface MapBaseHandle {
   getMap: () => MapLibreMap | null;
@@ -38,6 +39,10 @@ const LIGHT_STYLE =
 const DARK_STYLE =
   "https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json";
 
+function styleForTheme(theme: "light" | "dark") {
+  return theme === "dark" ? DARK_STYLE : LIGHT_STYLE;
+}
+
 export const MapBase = forwardRef<MapBaseHandle, MapBaseProps>(
   (
     {
@@ -52,6 +57,9 @@ export const MapBase = forwardRef<MapBaseHandle, MapBaseProps>(
   ) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<MapLibreMap | null>(null);
+    const appliedStyleRef = useRef<string | null>(null);
+    const onReadyRef = useRef(onReady);
+    onReadyRef.current = onReady;
     const { resolvedTheme } = useTheme();
     const prefersReducedMotion =
       typeof window !== "undefined"
@@ -114,16 +122,22 @@ export const MapBase = forwardRef<MapBaseHandle, MapBaseProps>(
     }));
 
     useEffect(() => {
-      if (!containerRef.current || mapRef.current) return;
+      if (!containerRef.current) return;
 
-      let map: MapLibreMap;
+      let cancelled = false;
+      let map: MapLibreMap | null = null;
 
       // Lazy-load MapLibre to keep app shell small
       import("maplibre-gl")
         .then(({ Map }) => {
+          if (cancelled || !containerRef.current) return;
+
+          const initialStyle = styleForTheme(resolvedTheme);
+          appliedStyleRef.current = initialStyle;
+
           map = new Map({
-            container: containerRef.current!,
-            style: resolvedTheme === "dark" ? DARK_STYLE : LIGHT_STYLE,
+            container: containerRef.current,
+            style: initialStyle,
             center,
             zoom,
             interactive,
@@ -131,8 +145,9 @@ export const MapBase = forwardRef<MapBaseHandle, MapBaseProps>(
           });
 
           map.on("load", () => {
+            if (cancelled) { map?.remove(); return; }
             mapRef.current = map;
-            onReady?.(map);
+            onReadyRef.current?.(map);
           });
 
           map.on("error", (e) => {
@@ -144,16 +159,24 @@ export const MapBase = forwardRef<MapBaseHandle, MapBaseProps>(
         });
 
       return () => {
+        cancelled = true;
         map?.remove();
         mapRef.current = null;
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Switch tile style on theme change
+    // Switch tile style on theme change — re-add custom layers after setStyle
     useEffect(() => {
-      if (!mapRef.current) return;
-      mapRef.current.setStyle(resolvedTheme === "dark" ? DARK_STYLE : LIGHT_STYLE);
+      const map = mapRef.current;
+      if (!map) return;
+      const newStyle = styleForTheme(resolvedTheme);
+      if (newStyle === appliedStyleRef.current) return;
+      appliedStyleRef.current = newStyle;
+      map.setStyle(newStyle);
+      map.once("style.load", () => {
+        onReadyRef.current?.(map);
+      });
     }, [resolvedTheme]);
 
     return (
@@ -163,7 +186,7 @@ export const MapBase = forwardRef<MapBaseHandle, MapBaseProps>(
         role="application"
         aria-label={ariaLabel}
         tabIndex={0}
-        style={{ outline: "none" }}
+        style={{ outline: "none", position: "absolute", inset: 0 }}
       />
     );
   }

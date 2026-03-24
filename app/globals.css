@@ -204,6 +204,18 @@ html {
   transform: translateY(-1px);
 }
 
+/* ── NYT-style pill button hover ───────────────────────────────────── */
+.pill-btn {
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.pill-btn:hover {
+  background-color: var(--bg-hover, rgba(0, 0, 0, 0.04)) !important;
+  border-color: var(--text-secondary) !important;
+}
+.dark .pill-btn:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
 /* ── Timer states ───────────────────────────────────────────────────── */
 .timer-safe { color: #22c55e; }
 .timer-warn { color: #f59e0b; }

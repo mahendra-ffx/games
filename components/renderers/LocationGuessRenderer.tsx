@@ -3,15 +3,9 @@
 /**
  * LocationGuessRenderer — Hunt the Landmark
  *
- * Timed map-based location guessing game.
- * Each round: player sees an emoji clue and has time_limit_sec seconds
- * to click on the map where they think that landmark is.
- * Score is based on accuracy (distance in km) + time remaining.
- *
- * Hint tier 1: Zoom to the district the landmark is in
- * Hint tier 2: Show a 2km distance ring around the landmark
- *
- * Timer uses requestAnimationFrame to avoid battery drain from 50ms setInterval.
+ * Full-bleed map with floating UI card overlay (matches SuburbChallengeRenderer pattern).
+ * Each round: player sees an emoji clue + landmark name, clicks on the map.
+ * Timer uses requestAnimationFrame. Score based on distance + time remaining.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -20,7 +14,7 @@ import { MapBase } from "@/components/MapBase";
 import { announceToScreenReader } from "@/components/GameShell";
 import { haversineKm, scoreLocationGuess } from "@/lib/scoring";
 import type { MapBaseHandle } from "@/components/MapBase";
-import type { Map as MapLibreMap, LngLat } from "maplibre-gl";
+import type { Map as MapLibreMap } from "maplibre-gl";
 import type { LandmarkHuntConfig, LandmarkHuntLocation } from "@/types/game";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -34,7 +28,7 @@ export interface LandmarkResult {
   points: number;
 }
 
-type Phase = "intro" | "playing" | "feedback" | "complete";
+type Phase = "start" | "playing" | "feedback" | "complete";
 
 interface LocationGuessRendererProps {
   config: LandmarkHuntConfig;
@@ -42,29 +36,35 @@ interface LocationGuessRendererProps {
   hintTier?: 1 | 2;
 }
 
-// ── Scoring — imported from lib/scoring ───────────────────────────────────────
-// haversineKm and scoreLocationGuess are re-exported from lib/scoring.ts
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-function getAccuracyLabel(km: number): string {
-  if (km < 0.5) return "Spot on! 🎯";
-  if (km < 2) return "Very close! 👌";
-  if (km < 5) return "Not bad 🙂";
-  if (km < 10) return "Getting warmer 🌡️";
-  return "A long way off 📍";
+function getAccuracyLabel(km: number): { label: string; color: string } {
+  if (km < 0.5) return { label: "DIRECT HIT! 🎯", color: "#2ecc71" };
+  if (km < 2) return { label: "Close Enough! 👍", color: "#f1c40f" };
+  if (km < 5) return { label: "Bit of a walk... 🥾", color: "#e67e22" };
+  return { label: "Miles off... ❌", color: "#e74c3c" };
 }
 
 const MAX_POINTS_PER_ROUND = 1000;
 
-// Rank from average distance
 function getRank(results: LandmarkResult[]): string {
   const totalScore = results.reduce((s, r) => s + r.points, 0);
   const maxScore = results.length * MAX_POINTS_PER_ROUND;
   const pct = totalScore / maxScore;
-  if (pct > 0.85) return "Canberra GPS 🛰️";
-  if (pct > 0.65) return "Local Legend 🌟";
-  if (pct > 0.45) return "Reasonable Canberran 🙂";
-  if (pct > 0.25) return "Tourist Mode 🗺️";
-  return "Are you sure you're in Canberra? 😂";
+  if (pct > 0.85) return "The Skywhale 🐋";
+  if (pct > 0.65) return "Certified Ken Behrens 🦁";
+  if (pct > 0.45) return "APS 6 Team Leader 📎";
+  if (pct > 0.25) return "Summernats Spectator 🚗";
+  return "Stuck in the Glenloch Interchange 😵‍💫";
+}
+
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -79,6 +79,7 @@ const LINE_SOURCE = "distance-line";
 const LINE_LAYER_ID = "distance-line-layer";
 const HINT_RING_SOURCE = "hint-ring";
 const HINT_RING_LAYER = "hint-ring-layer";
+const FEEDBACK_DELAY_MS = 3000;
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -91,16 +92,21 @@ export function LocationGuessRenderer({
   const mapInstanceRef = useRef<MapLibreMap | null>(null);
   const rafRef = useRef<number>(0);
   const startTimeRef = useRef<number>(0);
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Stable ref for handleMapClick — avoids stale closures in MapLibre event handlers
+  const handleMapClickRef = useRef<(lng: number, lat: number) => void>(() => {});
 
-  const [phase, setPhase] = useState<Phase>("intro");
+  const [phase, setPhase] = useState<Phase>("start");
+  const [mapReady, setMapReady] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [results, setResults] = useState<LandmarkResult[]>([]);
+  const [score, setScore] = useState(0);
   const [timeRemainingMs, setTimeRemainingMs] = useState(config.time_limit_sec * 1000);
   const [lastResult, setLastResult] = useState<LandmarkResult | null>(null);
 
-  // Fixed quiz order for the session (use all locations, capped at config.rounds)
+  // Fixed quiz order
   const [quizLocations] = useState<LandmarkHuntLocation[]>(() => {
-    const shuffled = [...config.locations].sort(() => Math.random() - 0.5);
+    const shuffled = shuffle(config.locations);
     return shuffled.slice(0, Math.min(config.rounds, shuffled.length));
   });
 
@@ -108,6 +114,10 @@ export function LocationGuessRenderer({
   const timeLimitMs = config.time_limit_sec * 1000;
 
   // ── Timer (RAF-based) ───────────────────────────────────────────────────────
+
+  const stopTimer = useCallback(() => {
+    cancelAnimationFrame(rafRef.current);
+  }, []);
 
   const startTimer = useCallback(() => {
     startTimeRef.current = performance.now();
@@ -120,47 +130,38 @@ export function LocationGuessRenderer({
       if (remaining > 0) {
         rafRef.current = requestAnimationFrame(tick);
       } else {
-        // Timed out — record as miss
-        handleAnswer(null, null);
+        // Time's up — record as miss
+        handleMapClickRef.current(-999, -999); // sentinel for timeout
       }
     };
 
     rafRef.current = requestAnimationFrame(tick);
-  }, [timeLimitMs]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [timeLimitMs]);
 
-  const stopTimer = useCallback(() => {
-    cancelAnimationFrame(rafRef.current);
-  }, []);
-
-  useEffect(() => {
-    if (phase === "playing") {
-      setTimeRemainingMs(timeLimitMs);
-      startTimer();
-    }
-    return stopTimer;
-  }, [phase, currentIdx, startTimer, stopTimer, timeLimitMs]);
-
-  // ── Map setup ───────────────────────────────────────────────────────────────
+  // ── Map init ────────────────────────────────────────────────────────────────
 
   const initMap = useCallback((map: MapLibreMap) => {
     mapInstanceRef.current = map;
 
-    // Empty sources for markers
-    for (const [id, coord] of [
-      [MARKER_SOURCE, [CANBERRA_CENTER[0], -90]] as [string, [number, number]],
-      [CORRECT_SOURCE, [CANBERRA_CENTER[0], -90]] as [string, [number, number]],
-    ]) {
-      map.addSource(id, {
-        type: "geojson",
-        data: { type: "Feature", geometry: { type: "Point", coordinates: coord }, properties: {} },
-      });
+    // Idempotent — clean up if re-init (e.g. after theme switch)
+    for (const layerId of [MARKER_LAYER, CORRECT_LAYER, LINE_LAYER_ID, HINT_RING_LAYER]) {
+      if (map.getLayer(layerId)) map.removeLayer(layerId);
+    }
+    for (const srcId of [MARKER_SOURCE, CORRECT_SOURCE, LINE_SOURCE, HINT_RING_SOURCE]) {
+      if (map.getSource(srcId)) map.removeSource(srcId);
     }
 
+    // Empty sources
+    for (const id of [MARKER_SOURCE, CORRECT_SOURCE]) {
+      map.addSource(id, {
+        type: "geojson",
+        data: { type: "Feature", geometry: { type: "Point", coordinates: [0, -90] }, properties: {} },
+      });
+    }
     map.addSource(LINE_SOURCE, {
       type: "geojson",
       data: { type: "Feature", geometry: { type: "LineString", coordinates: [] }, properties: {} },
     });
-
     map.addSource(HINT_RING_SOURCE, {
       type: "geojson",
       data: { type: "FeatureCollection", features: [] },
@@ -172,37 +173,37 @@ export function LocationGuessRenderer({
       type: "circle",
       source: MARKER_SOURCE,
       paint: {
-        "circle-radius": 12,
-        "circle-color": "#00558C",
+        "circle-radius": 10,
+        "circle-color": "#2c3e50",
         "circle-opacity": 0.85,
         "circle-stroke-width": 2,
         "circle-stroke-color": "#fff",
       },
     });
 
-    // Correct marker (green)
+    // Correct marker (dynamic color — updated per round)
     map.addLayer({
       id: CORRECT_LAYER,
       type: "circle",
       source: CORRECT_SOURCE,
       paint: {
-        "circle-radius": 14,
-        "circle-color": "#22c55e",
+        "circle-radius": 12,
+        "circle-color": "#2ecc71",
         "circle-opacity": 0.9,
         "circle-stroke-width": 2,
         "circle-stroke-color": "#fff",
       },
     });
 
-    // Distance line
+    // Distance line (dashed)
     map.addLayer({
       id: LINE_LAYER_ID,
       type: "line",
       source: LINE_SOURCE,
-      paint: { "line-color": "#f59e0b", "line-width": 2, "line-dasharray": [4, 2] },
+      paint: { "line-color": "#e67e22", "line-width": 3, "line-dasharray": [4, 4], "line-opacity": 0.8 },
     });
 
-    // Hint ring (dashed circle)
+    // Hint ring
     map.addLayer({
       id: HINT_RING_LAYER,
       type: "line",
@@ -210,36 +211,17 @@ export function LocationGuessRenderer({
       paint: { "line-color": "#8b5cf6", "line-width": 2, "line-dasharray": [6, 3] },
     });
 
-    // Cursor
     map.getCanvas().style.cursor = "crosshair";
 
-    // Click to guess
+    // Single click handler that delegates to ref
     map.on("click", (e) => {
-      if (phase !== "playing") return; // stale closure — handled via ref below
-      handleAnswer(e.lngLat.lng, e.lngLat.lat);
+      handleMapClickRef.current(e.lngLat.lng, e.lngLat.lat);
     });
 
-    setPhase("playing");
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    setMapReady(true);
+  }, []);
 
-  // Re-attach click listener when phase changes
-  useEffect(() => {
-    const map = mapInstanceRef.current;
-    if (!map) return;
-
-    const handler = (e: { lngLat: LngLat }) => {
-      if (phase === "playing") handleAnswer(e.lngLat.lng, e.lngLat.lat);
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    map.on("click", handler as any);
-    return () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      map.off("click", handler as any);
-    };
-  }, [phase, currentIdx]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Answer handling ─────────────────────────────────────────────────────────
+  // ── Click handler ─────────────────────────────────────────────────────────
 
   const handleAnswer = useCallback(
     (clickedLng: number | null, clickedLat: number | null) => {
@@ -250,80 +232,81 @@ export function LocationGuessRenderer({
 
       const timeUsedMs = timeLimitMs - timeRemainingMs;
       const map = mapInstanceRef.current;
+      const isTimeout = clickedLng === -999;
 
       let distanceKm: number | null = null;
       let points = 0;
 
-      if (clickedLng !== null && clickedLat !== null) {
+      if (!isTimeout && clickedLng !== null && clickedLat !== null) {
         distanceKm = haversineKm(clickedLat, clickedLng, current.lat, current.lng);
         points = scoreLocationGuess(distanceKm, timeRemainingMs, timeLimitMs);
 
-        if (distanceKm < 1) {
-          confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
+        if (distanceKm < 0.5) {
+          confetti({ particleCount: 50, spread: 70, origin: { y: 0.8 } });
         }
 
         // Show guess marker
-        if (map?.getSource(MARKER_SOURCE)) {
-          (map.getSource(MARKER_SOURCE) as unknown as { setData: (d: unknown) => void }).setData({
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [clickedLng, clickedLat] },
-            properties: {},
-          });
-        }
-      }
-
-      // Show correct location
-      if (map?.getSource(CORRECT_SOURCE)) {
-        (map.getSource(CORRECT_SOURCE) as unknown as { setData: (d: unknown) => void }).setData({
+        setSourceData(map, MARKER_SOURCE, {
           type: "Feature",
-          geometry: { type: "Point", coordinates: [current.lng, current.lat] },
+          geometry: { type: "Point", coordinates: [clickedLng, clickedLat] },
           properties: {},
         });
-      }
 
-      // Draw distance line
-      if (map?.getSource(LINE_SOURCE) && clickedLng !== null && clickedLat !== null) {
-        (map.getSource(LINE_SOURCE) as unknown as { setData: (d: unknown) => void }).setData({
+        // Draw distance line
+        setSourceData(map, LINE_SOURCE, {
           type: "Feature",
           geometry: {
             type: "LineString",
-            coordinates: [
-              [clickedLng, clickedLat],
-              [current.lng, current.lat],
-            ],
+            coordinates: [[clickedLng, clickedLat], [current.lng, current.lat]],
           },
           properties: {},
         });
-        // Fit bounds to show both
-        mapRef.current?.flyTo(
-          [(clickedLng + current.lng) / 2, (clickedLat + current.lat) / 2],
-          11
-        );
+
+        // Set correct marker color based on accuracy
+        const { color } = getAccuracyLabel(distanceKm);
+        if (map?.getLayer(CORRECT_LAYER)) {
+          map.setPaintProperty(CORRECT_LAYER, "circle-color", color);
+        }
+      }
+
+      // Show correct location marker
+      setSourceData(map, CORRECT_SOURCE, {
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [current.lng, current.lat] },
+        properties: {},
+      });
+
+      // Fly to show both markers or just the correct location
+      if (!isTimeout && clickedLng !== null && clickedLat !== null) {
+        const midLng = (clickedLng + current.lng) / 2;
+        const midLat = (clickedLat + current.lat) / 2;
+        mapRef.current?.flyTo([midLng, midLat], 12);
       } else {
         mapRef.current?.flyTo([current.lng, current.lat], 13);
       }
 
       const result: LandmarkResult = {
         location: current,
-        clickedLng,
-        clickedLat,
+        clickedLng: isTimeout ? null : clickedLng,
+        clickedLat: isTimeout ? null : clickedLat,
         distanceKm,
         timeUsedMs,
         points,
       };
       setLastResult(result);
-
-      const announcement =
-        clickedLng === null
-          ? `Time's up! ${current.name} was at ${current.emoji}`
-          : `${distanceKm !== null ? distanceKm.toFixed(1) : "?"}km away. ${points} points.`;
-      announceToScreenReader(announcement);
+      setScore((s) => s + points);
 
       const newResults = [...results, result];
       setResults(newResults);
 
-      setTimeout(() => {
-        // Clear markers
+      announceToScreenReader(
+        isTimeout
+          ? `Time's up! ${current.name}.`
+          : `${distanceKm !== null ? distanceKm.toFixed(1) : "?"}km away. ${points} points.`
+      );
+
+      // Auto-advance after feedback delay
+      feedbackTimerRef.current = setTimeout(() => {
         clearMapMarkers(map);
 
         if (currentIdx + 1 >= quizLocations.length) {
@@ -334,257 +317,328 @@ export function LocationGuessRenderer({
           setCurrentIdx((i) => i + 1);
           setLastResult(null);
           setPhase("playing");
-          // Reset map view
           mapRef.current?.flyTo(CANBERRA_CENTER, CANBERRA_ZOOM);
         }
-      }, 2500);
+      }, FEEDBACK_DELAY_MS);
     },
     [phase, current, currentIdx, results, timeRemainingMs, timeLimitMs, quizLocations, onComplete, stopTimer]
   );
 
-  // ── Hints ───────────────────────────────────────────────────────────────────
+  // Keep ref in sync
+  useEffect(() => {
+    handleMapClickRef.current = (lng, lat) => handleAnswer(lng, lat);
+  }, [handleAnswer]);
+
+  // ── Start/restart timer when phase enters "playing" ────────────────────────
+
+  useEffect(() => {
+    if (phase === "playing") {
+      setTimeRemainingMs(timeLimitMs);
+      startTimer();
+    }
+    return stopTimer;
+  }, [phase, currentIdx, startTimer, stopTimer, timeLimitMs]);
+
+  // ── Cleanup on unmount ────────────────────────────────────────────────────
+
+  useEffect(() => () => {
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+  }, []);
+
+  // ── Hints ─────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || phase !== "playing") return;
 
     if (hintTier === 1) {
-      // Zoom to district (rough zoom to Canberra sub-region containing the landmark)
       mapRef.current?.flyTo([current.lng, current.lat], 12);
     }
 
     if (hintTier === 2) {
-      // 2km ring around correct location
       const circle = approximateCircle(current.lng, current.lat, 2);
-      if (map.getSource(HINT_RING_SOURCE)) {
-        (map.getSource(HINT_RING_SOURCE) as unknown as { setData: (d: unknown) => void }).setData({
-          type: "FeatureCollection",
-          features: [{ type: "Feature", geometry: circle, properties: {} }],
-        });
-      }
+      setSourceData(map, HINT_RING_SOURCE, {
+        type: "FeatureCollection",
+        features: [{ type: "Feature", geometry: circle, properties: {} }],
+      });
     }
   }, [hintTier, phase, current]);
 
-  // ── Timer colour (green → yellow → red) ────────────────────────────────────
+  // ── Derived values ──────────────────────────────────────────────────────
 
   const timerPct = timeRemainingMs / timeLimitMs;
-  const timerColor = timerPct > 0.5 ? "#22c55e" : timerPct > 0.25 ? "#f59e0b" : "#ef4444";
+  const timerColor = timerPct > 0.5 ? "#2ecc71" : timerPct > 0.25 ? "#f59e0b" : "#ef4444";
+  const remaining = quizLocations.length - currentIdx;
 
-  // ── Completion ──────────────────────────────────────────────────────────────
+  // ── Start game ──────────────────────────────────────────────────────────
+
+  const startGame = useCallback(() => {
+    setPhase("playing");
+    setCurrentIdx(0);
+    setScore(0);
+    setResults([]);
+  }, []);
+
+  // ── Complete screen ─────────────────────────────────────────────────────
 
   if (phase === "complete") {
     const totalScore = results.reduce((s, r) => s + r.points, 0);
     const rank = getRank(results);
-    const avgDist =
-      results.filter((r) => r.distanceKm !== null).reduce((s, r) => s + (r.distanceKm ?? 0), 0) /
-      Math.max(1, results.filter((r) => r.distanceKm !== null).length);
-
-    const shareLines = results
-      .map((r) => {
-        const d = r.distanceKm !== null ? `${r.distanceKm.toFixed(1)}km` : "missed";
-        return `${r.location.emoji} ${r.location.name}: ${d} (${r.points}pts)`;
-      })
-      .join("\n");
-    const shareText = `Hunt the Landmark — Canberra\nScore: ${totalScore.toLocaleString()}\n${rank}\n\n${shareLines}`;
 
     const handleShare = () => {
+      const shareText = `I scored ${totalScore} on Hunt the Landmark!\nRank: ${rank}\nCan you find the spots? 📍🕵️‍♂️`;
       if (navigator.share) {
-        navigator.share({ text: shareText }).catch(() => null);
+        navigator.share({ title: "Hunt the Landmark", text: shareText }).catch(() => null);
       } else {
         navigator.clipboard.writeText(shareText).catch(() => null);
       }
     };
 
+    // Fire confetti for high scores
+    if (totalScore >= 7000) {
+      const end = Date.now() + 4000;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10005 };
+      const interval = setInterval(() => {
+        if (Date.now() > end) return clearInterval(interval);
+        confetti({ ...defaults, particleCount: 40, origin: { x: Math.random(), y: Math.random() - 0.2 } });
+      }, 250);
+    }
+
     return (
-      <div className="py-6 text-center">
-        <div className="text-5xl mb-3">📍</div>
-        <p className="type-label mb-1" style={{ color: "var(--color-gray-500)" }}>
-          Final Score
-        </p>
-        <p className="text-5xl font-bold mb-1" style={{ color: "var(--text-primary)" }}>
-          {totalScore.toLocaleString()}
-        </p>
-        <p className="type-body mb-1" style={{ color: "var(--text-secondary)" }}>
-          Avg distance: {avgDist.toFixed(1)}km
-        </p>
-        <p className="type-headline mb-6" style={{ color: "var(--color-ct-blue)" }}>
-          {rank}
-        </p>
+      <div className="flex-1 overflow-y-auto flex flex-col items-center gap-5 py-8 px-4"
+        style={{ backgroundColor: "var(--bg-page)" }}
+      >
+        <span style={{ fontSize: 42 }}>📍</span>
+        <div className="text-center">
+          <h2 className="type-headline mb-2" style={{ color: "var(--text-primary)" }}>Hunt Complete!</h2>
+          <p className="font-bold text-lg mb-1" style={{ color: timerColor }}>{rank}</p>
+          <p className="text-5xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>
+            {totalScore.toLocaleString()} <span className="text-2xl font-normal" style={{ color: "var(--text-secondary)" }}>pts</span>
+          </p>
+        </div>
 
         {/* Per-round breakdown */}
-        <div className="space-y-2 mb-6 max-w-xs mx-auto text-left">
+        <div className="space-y-2 mb-4 w-full max-w-sm text-left">
           {results.map((r, i) => (
             <div key={i} className="flex items-center gap-2 text-sm">
               <span className="text-lg">{r.location.emoji}</span>
-              <span className="flex-1" style={{ color: "var(--text-primary)" }}>
-                {r.location.name}
-              </span>
+              <span className="flex-1" style={{ color: "var(--text-primary)" }}>{r.location.name}</span>
               <span style={{ color: "var(--text-secondary)" }}>
                 {r.distanceKm !== null ? `${r.distanceKm.toFixed(1)}km` : "missed"}
               </span>
-              <span className="font-semibold" style={{ color: "var(--color-ct-blue)" }}>
-                {r.points}
-              </span>
+              <span className="font-semibold" style={{ color: "var(--color-ct-blue)" }}>{r.points}</span>
             </div>
           ))}
         </div>
 
-        <button
-          onClick={handleShare}
-          className="type-button px-6 py-3 rounded-lg text-white"
-          style={{ backgroundColor: "var(--color-ct-blue)" }}
-        >
-          Share Result
-        </button>
+        <div className="w-full max-w-sm flex flex-col gap-3">
+          <button onClick={handleShare} className="w-full type-button py-3 rounded-xl text-white" style={{ backgroundColor: "#2ecc71" }}>
+            Share Score 📤
+          </button>
+          <button onClick={() => window.location.reload()} className="w-full type-button py-3 rounded-xl text-white" style={{ backgroundColor: "#f39c12" }}>
+            Play Again 🔄
+          </button>
+        </div>
       </div>
     );
   }
 
-  // ── Intro ───────────────────────────────────────────────────────────────────
-
-  if (phase === "intro") {
-    return (
-      <div className="text-center py-12">
-        <div className="text-6xl mb-4">📍</div>
-        <h2 className="type-headline mb-2" style={{ color: "var(--text-primary)" }}>
-          Hunt the Landmark
-        </h2>
-        <p className="type-body mb-6 max-w-sm mx-auto" style={{ color: "var(--text-secondary)" }}>
-          You&apos;ll see a landmark name. Click where you think it is on the map.
-          You have {config.time_limit_sec} seconds per round.
-        </p>
-        <button
-          onClick={() => {
-            setPhase("playing");
-          }}
-          className="type-button px-6 py-3 rounded-lg text-white"
-          style={{ backgroundColor: "var(--color-ct-blue)" }}
-        >
-          Start
-        </button>
-      </div>
-    );
-  }
-
-  // ── Playing / feedback ──────────────────────────────────────────────────────
+  // ── Full-bleed playing layout (map fills container, UI floats) ──────────
 
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-3">
-        <div className="flex items-center justify-between mb-1">
-          <p className="type-label" style={{ color: "var(--color-gray-500)" }}>
-            Round {currentIdx + 1} of {quizLocations.length}
-          </p>
-          {phase === "playing" && (
-            <p
-              className="type-label font-bold tabular-nums"
-              style={{ color: timerColor }}
-              aria-live="off"
+    <div className="relative flex-1 w-full overflow-hidden" style={{ minHeight: 0 }}>
+
+      {/* ── MAP — full bleed ────────────────────────────────────────── */}
+      <MapBase
+        ref={mapRef}
+        center={CANBERRA_CENTER}
+        zoom={CANBERRA_ZOOM}
+        className="w-full h-full"
+        onReady={initMap}
+        aria-label="Canberra landmark map — click to place your guess"
+      />
+
+      {/* ── Floating UI card (top centre) ────────────────────────────── */}
+      <div
+        className="absolute top-4 left-1/2 -translate-x-1/2 z-10 w-[90%] max-w-[400px]"
+        style={{ pointerEvents: "auto" }}
+      >
+        {/* Start screen overlay */}
+        {phase === "start" && (
+          <div
+            className="rounded-2xl p-6 text-center"
+            style={{
+              backgroundColor: "rgba(255, 255, 255, 0.95)",
+              backdropFilter: "blur(10px)",
+              boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
+            }}
+          >
+            <h2 className="type-headline mb-2" style={{ color: "var(--text-primary)" }}>
+              Hunt the Landmark 📍
+            </h2>
+            <p className="type-body mb-1" style={{ color: "var(--text-secondary)" }}>
+              We give you a famous Canberra spot.
+            </p>
+            <p className="type-body mb-1" style={{ color: "var(--text-secondary)" }}>
+              <strong>Tap the map to locate it.</strong>
+            </p>
+            <p className="font-bold mb-2" style={{ color: "#e74c3c", fontSize: 14 }}>
+              ⚡ You have {config.time_limit_sec} seconds per round! ⚡
+            </p>
+            <p className="type-label mb-4" style={{ color: "var(--text-muted)" }}>
+              Playing {quizLocations.length} Rounds
+            </p>
+            <button
+              onClick={startGame}
+              className="w-full type-button py-3 rounded-xl text-white"
+              style={{ backgroundColor: "#2980b9" }}
+              disabled={!mapReady}
             >
-              {(timeRemainingMs / 1000).toFixed(1)}s
+              {mapReady ? "Start Hunt" : "Loading map..."}
+            </button>
+          </div>
+        )}
+
+        {/* Playing: clue + timer + stats */}
+        {(phase === "playing" || phase === "feedback") && current && (
+          <div
+            className="rounded-2xl overflow-hidden"
+            style={{
+              backgroundColor: "rgba(255, 255, 255, 0.95)",
+              backdropFilter: "blur(10px)",
+              boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
+            }}
+          >
+            {/* Timer bar at top of card */}
+            {phase === "playing" && (
+              <div className="h-1.5 w-full" style={{ backgroundColor: "#eee" }}>
+                <div
+                  className="h-full transition-all duration-100"
+                  style={{
+                    width: `${timerPct * 100}%`,
+                    backgroundColor: timerColor,
+                  }}
+                />
+              </div>
+            )}
+
+            <div className="p-3 text-center">
+              {/* Emoji clue box */}
+              <div
+                className="w-full rounded-xl flex items-center justify-center mb-2"
+                style={{
+                  height: 80,
+                  backgroundColor: "#f0f2f5",
+                  border: "2px solid #dfe4ea",
+                  fontSize: 48,
+                }}
+              >
+                {current.emoji}
+              </div>
+
+              {/* Landmark name */}
+              <p className="font-bold text-lg" style={{ color: "#2c3e50", lineHeight: 1.2 }}>
+                {current.name}
+              </p>
+
+              {/* Stats row */}
+              <div className="flex justify-center gap-5 mt-2" style={{ fontSize: 13, fontWeight: 600, color: "#555" }}>
+                <div>Score: <span style={{ color: "#007AFF", fontSize: 15 }}>{score}</span></div>
+                <div>Left: <span style={{ color: "#007AFF", fontSize: 15 }}>{remaining}</span></div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Result card (slides up from bottom) ─────────────────────── */}
+      {phase === "feedback" && lastResult && (
+        <div
+          className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10 w-[90%] max-w-[400px] rounded-2xl p-5 text-center"
+          style={{
+            backgroundColor: "white",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+            animation: "slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+          }}
+        >
+          {lastResult.distanceKm !== null ? (
+            <>
+              <p className="text-2xl font-black mb-1" style={{ color: getAccuracyLabel(lastResult.distanceKm).color }}>
+                {getAccuracyLabel(lastResult.distanceKm).label}
+              </p>
+              <p className="text-lg font-semibold" style={{ color: "#555" }}>
+                You were {formatDistance(lastResult.distanceKm)} away
+              </p>
+            </>
+          ) : (
+            <p className="text-2xl font-black" style={{ color: "#e74c3c" }}>
+              Time&apos;s Up! ⏱️
             </p>
           )}
-        </div>
-
-        <p className="text-2xl font-bold text-center" style={{ color: "var(--text-primary)" }}>
-          {current.emoji} {current.name}
-        </p>
-
-        {/* Timer bar */}
-        {phase === "playing" && (
-          <div
-            className="mt-2 h-2 rounded-full overflow-hidden"
-            style={{ backgroundColor: "var(--color-gray-200)" }}
-            role="progressbar"
-            aria-valuenow={Math.round(timerPct * 100)}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label="Time remaining"
-          >
+          {/* Auto-advance progress bar */}
+          <div className="h-1 mt-4 rounded-full overflow-hidden" style={{ backgroundColor: "#eee" }}>
             <div
-              className="h-full rounded-full transition-all duration-100"
-              style={{ width: `${timerPct * 100}%`, backgroundColor: timerColor }}
+              className="h-full rounded-full"
+              style={{
+                backgroundColor: "#2c3e50",
+                animation: `fillBar ${FEEDBACK_DELAY_MS}ms linear forwards`,
+              }}
             />
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Feedback overlay */}
-        {phase === "feedback" && lastResult && (
-          <div
-            className="mt-2 p-3 rounded-lg text-center"
-            style={{ backgroundColor: "var(--bg-surface)" }}
-            aria-live="polite"
-          >
-            {lastResult.distanceKm !== null ? (
-              <>
-                <p className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
-                  {getAccuracyLabel(lastResult.distanceKm)}
-                </p>
-                <p className="type-body" style={{ color: "var(--text-secondary)" }}>
-                  {lastResult.distanceKm.toFixed(2)} km away — {lastResult.points} pts
-                </p>
-              </>
-            ) : (
-              <p className="text-lg font-bold" style={{ color: "#ef4444" }}>
-                Time&apos;s up! ⏱️
-              </p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Map */}
-      <div className="w-full rounded-xl overflow-hidden" style={{ height: "380px" }}>
-        <MapBase
-          ref={mapRef}
-          center={CANBERRA_CENTER}
-          zoom={CANBERRA_ZOOM}
-          className="w-full h-full"
-          onReady={initMap}
-          aria-label="Canberra landmark location map — click to place your guess"
-        />
-      </div>
-
-      <p className="mt-2 text-center type-label" style={{ color: "var(--color-gray-400)" }}>
-        Click on the map to place your guess
-      </p>
+      {/* Animations */}
+      <style>{`
+        @keyframes slideUp {
+          from { transform: translateX(-50%) translateY(120%); }
+          to { transform: translateX(-50%) translateY(0); }
+        }
+        @keyframes fillBar {
+          from { width: 0%; }
+          to { width: 100%; }
+        }
+      `}</style>
     </div>
   );
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Utility functions ─────────────────────────────────────────────────────────
 
-function clearMapMarkers(map: MapLibreMap | null) {
+function formatDistance(km: number): string {
+  if (km < 1) return `${Math.round(km * 1000)}m`;
+  return `${km.toFixed(2)}km`;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function setSourceData(map: MapLibreMap | null, sourceId: string, data: any) {
   if (!map) return;
-  for (const [srcId, coord] of [
-    [MARKER_SOURCE, [CANBERRA_CENTER[0], -90]] as [string, [number, number]],
-    [CORRECT_SOURCE, [CANBERRA_CENTER[0], -90]] as [string, [number, number]],
-  ]) {
-    if (map.getSource(srcId)) {
-      (map.getSource(srcId) as unknown as { setData: (d: unknown) => void }).setData({
-        type: "Feature",
-        geometry: { type: "Point", coordinates: coord },
-        properties: {},
-      });
-    }
-  }
-  if (map.getSource(LINE_SOURCE)) {
-    (map.getSource(LINE_SOURCE) as unknown as { setData: (d: unknown) => void }).setData({
-      type: "Feature",
-      geometry: { type: "LineString", coordinates: [] },
-      properties: {},
-    });
-  }
-  if (map.getSource(HINT_RING_SOURCE)) {
-    (map.getSource(HINT_RING_SOURCE) as unknown as { setData: (d: unknown) => void }).setData({
-      type: "FeatureCollection",
-      features: [],
-    });
+  const src = map.getSource(sourceId);
+  if (src && "setData" in src) {
+    (src as unknown as { setData: (d: unknown) => void }).setData(data);
   }
 }
 
-/** Approximate a circle as a GeoJSON polygon (64-point approximation) */
+function clearMapMarkers(map: MapLibreMap | null) {
+  if (!map) return;
+  for (const id of [MARKER_SOURCE, CORRECT_SOURCE]) {
+    setSourceData(map, id, {
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [0, -90] },
+      properties: {},
+    });
+  }
+  setSourceData(map, LINE_SOURCE, {
+    type: "Feature",
+    geometry: { type: "LineString", coordinates: [] },
+    properties: {},
+  });
+  setSourceData(map, HINT_RING_SOURCE, {
+    type: "FeatureCollection",
+    features: [],
+  });
+}
+
 function approximateCircle(
   centerLng: number,
   centerLat: number,
